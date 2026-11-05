@@ -919,7 +919,7 @@ function fogFrame(now){requestAnimationFrame(fogFrame);const dt=Math.min(.05,(no
 requestAnimationFrame(fogFrame);
 
 // ---- controls: Layers toggle + reset ----
-$("layerList").insertAdjacentHTML("afterbegin",`<label title="Unexplored code stays hidden until you walk a flow or open a building."><input type="checkbox" id="fogToggle" ${S.on?"checked":""}><b>Fog of war</b><em>POC</em><i>Unexplored code stays hidden until you walk a flow or open a building.</i></label>`);
+$("layerList").insertAdjacentHTML("afterbegin",`<label title="Unexplored code stays hidden until you walk a flow or open a building."><input type="checkbox" id="fogToggle" ${S.on?"checked":""}><b>Fog of war</b><em></em><i>Unexplored code stays hidden until you walk a flow or open a building.</i></label>`);
 $("fogToggle").addEventListener("change",e=>{e.stopPropagation();S.on=e.target.checked;changed()});
 $("fhReset").onclick=()=>{S.b={};fnSet.clear();flSet.clear();msSet.clear();PATHS.forEach(p=>BS[p].goal=0);store.clear();quiet=true;changed();requestAnimationFrame(()=>requestAnimationFrame(()=>quiet=false))};
 window.cityFog={state:()=>({pct:pct(),fns:fnSet.size,flows:flSet.size,on:S.on,glimpsed:PATHS.filter(p=>S.b[p]===0.5).length}),reveal,reset:()=>$("fhReset").click(),open:p=>showFile(p),toggle:on=>{const t=$("fogToggle");if(t.checked!==on){t.checked=on;t.dispatchEvent(new Event("change",{bubbles:true}))}}};
