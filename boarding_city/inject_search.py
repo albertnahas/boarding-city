@@ -40,8 +40,8 @@ box.innerHTML=`<input id="findIn" type="search" placeholder="Find a file or func
 document.getElementById("bar").appendChild(box);
 const input=box.querySelector("input"),list=box.querySelector("ul"),hex=i=>"#"+COLORS[i%COLORS.length].toString(16).padStart(6,"0");
 // the index: every district, file (small files resolve to their block) and function, searchable by name and by path
-// long paths keep their first folder and their last three parts: the parts that tell files apart
-const clipPath=p=>{const a=p.split("/");return a.length>5?[a[0],"…",...a.slice(-3)].join("/"):p};
+// long paths keep their first two folders and their last three parts: the parts that tell files apart
+const clipPath=p=>{const a=p.split("/");return a.length>6?[...a.slice(0,2),"…",...a.slice(-3)].join("/"):p};
 const ITEMS=[...D.districts.map((d,i)=>({kind:"district",name:d.name,sub:`District · ${d.files.length} buildings`,i,go:()=>showDistrict(i)})),
   ...D.files.flatMap(f=>f.cluster?f.members.map(m=>({kind:"file",name:short(m.path),path:m.path,sub:`${clipPath(m.path)} · in ${short(f.path)}`,i:fileDistrict[f.path],go:()=>{showFile(f.path);const b=short(m.path),li=[...panel.querySelectorAll(".list li")].find(li=>li.querySelector("b")?.textContent===b);if(li){li.classList.add("found");li.scrollIntoView({block:"nearest"})}}}))
     :[{kind:"file",name:short(f.path),path:f.path,sub:`${clipPath(f.path)} · ${f.lines} lines`,i:fileDistrict[f.path],go:()=>showFile(f.path)},

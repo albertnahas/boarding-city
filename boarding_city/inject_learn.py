@@ -50,7 +50,7 @@ a.gh{color:var(--acc);text-decoration:none;white-space:nowrap}a.gh:hover{text-de
 #player.quiz #plTrack b.ahead{pointer-events:none;opacity:.25}
 #qz{width:min(560px,100%);position:relative;display:grid;gap:6px}#qz[hidden]{display:none}
 #qz .q{font-size:13px;text-align:center}#qz .q code{font:600 12.5px ui-monospace,Menlo,monospace;color:var(--flow)}#qz .q em{color:var(--mute);font-style:normal;font-size:12px}
-#qz .row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}#qz .row[hidden]{display:none}
+#qz .row{position:relative;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}#qz .row[hidden]{display:none}
 #qzIn{flex:1 1 200px;min-width:0;height:32px;box-sizing:border-box;padding:0 10px;border-radius:8px;border:1px solid #ffffff2e;background:#0f1320;color:var(--ink);font:13px ui-monospace,Menlo,monospace}
 #qzIn:focus{outline:2px solid var(--flow);outline-offset:1px}
 #qz .row button{padding:5px 10px;font-size:13px}
@@ -64,11 +64,12 @@ a.gh{color:var(--acc);text-decoration:none;white-space:nowrap}a.gh:hover{text-de
 #qzFb.half{background:#d9770633;color:#fcd34d;border:1px solid #fbbf2466}
 #qzFb.no{background:#e11d4833;color:#fda4af;border:1px solid #f43f5e66;animation:qzShake .35s}
 #qzFb code{font:600 12.5px ui-monospace,Menlo,monospace}#qzFb .why{margin-top:5px;color:var(--ink);font-size:12.5px;line-height:1.4;text-align:left}
-#app.quizzing .ftag{color:#cbd5e1!important;border-color:#ffffff14!important;font-weight:500!important}.ftag.qhide{visibility:hidden!important}
+#app.quizzing .ftag{color:#cbd5e1!important;border-color:#ffffff14!important;font-weight:500!important}#app.quizzing .ftag:not(.qsafe){visibility:hidden!important}
 #qzFb button{margin-left:8px;padding:3px 10px;font-size:12.5px}
 #qz .score{font-size:12px;color:var(--mute);text-align:center;font-variant-numeric:tabular-nums}
 #player.qok{box-shadow:0 0 0 2px #34d399,0 0 24px #34d39955}#player.qno{box-shadow:0 0 0 2px #f43f5e,0 0 24px #f43f5e55}
 @keyframes qzShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@media (max-width:700px){#qzList{bottom:auto;top:calc(100% + 4px)}}
 @media (prefers-reduced-motion:reduce){#qzFb.no{animation:none}#learnToast{transition:none}}
 """
 
@@ -179,16 +180,18 @@ const qBtn=document.createElement("button");qBtn.id="plQuiz";qBtn.type="button";
 row.insertBefore(qBtn,document.getElementById("plClose"));qBtn.onclick=()=>startQuiz(P.fi);
 const box=document.createElement("div");box.id="qz";box.hidden=true;
 box.innerHTML=`<div class="q" id="qzQ"></div><div class="row"><input id="qzIn" type="text" autocomplete="off" spellcheck="false" placeholder="Type a function name…" role="combobox" aria-expanded="false" aria-controls="qzList" aria-autocomplete="list" aria-labelledby="qzQ">
-  <button id="qzSubmit" type="button">Submit</button><button id="qzHint" type="button" title="Show which file it lives in (a right answer then scores 1 point)">Hint</button><button id="qzSkip" type="button" title="Show the answer (0 points)">Reveal</button></div>
-  <ul id="qzList" role="listbox" hidden></ul><div id="qzFb" role="status" hidden></div><div class="score" id="qzScore"></div>`;
+  <button id="qzSubmit" type="button">Submit</button><button id="qzHint" type="button" title="Show which file it lives in (a right answer then scores 1 point)">Hint</button><button id="qzSkip" type="button" title="Show the answer (0 points)">Reveal</button><ul id="qzList" role="listbox" hidden></ul></div>
+  <div id="qzFb" role="status" hidden></div><div class="score" id="qzScore"></div>`;
 pl.insertBefore(box,document.getElementById("plTrack"));
 const exitB=document.createElement("button");exitB.id="qzExit";exitB.type="button";exitB.textContent="Exit quiz";exitB.title="Leave the quiz; your progress is kept";row.insertBefore(exitB,document.getElementById("plClose"));
 const $q=id=>document.getElementById(id),qin=$q("qzIn"),qlist=$q("qzList"),qfb=$q("qzFb"),qrow=box.querySelector(".row");
 const target=()=>D.flows[Q.fi].steps[P.k+1],open_=()=>target()&&!Q.answered.has(P.k+1);
 const keep=()=>{L.run={fi:Q.fi,answered:[...Q.answered],pts:Q.pts,right:Q.right};save()};
-// the floors of the open building are labelled; hide the ones that would give away an unanswered step
+// the floors of the open building are labelled. During a quiz every floor label starts hidden (CSS) and is shown
+// only once it is known not to name an unanswered step, so labels created mid-animation can never leak
 function hideAhead(){if(!Q.on)return;const F=D.flows[Q.fi],ahead=new Set(F.steps.map((s,j)=>j>P.k&&!Q.answered.has(j)&&s.path===open.path?s.function:null).filter(Boolean));
-  open.tags.forEach(t=>{if(t.fl)t.el.classList.toggle("qhide",ahead.has(t.fl.userData.fn.name))})}
+  open.tags.forEach(t=>{if(t.fl)t.el.classList.toggle("qsafe",!ahead.has(t.fl.userData.fn.name))})}
+setInterval(hideAhead,250);
 function renderScore(){const N=D.flows[Q.fi].steps.length;
   [...$("plTrack").children].forEach((b,k)=>{b.classList.toggle("ahead",k>P.k&&!Q.answered.has(k));b.removeAttribute("title")});
   $q("qzScore").textContent=`Score ${Q.pts}/${2*Q.answered.size} · ${Q.right} right first try · ${N-1-Q.answered.size} to go`}
@@ -212,7 +215,7 @@ function settle(pts,head){const t=target();Q.answered.set(P.k+1,pts);Q.pts+=pts;
 function grade(){if(!open_())return;const t=target(),v=qin.value.trim().replace(/\(\)$/,"");if(!v)return qin.focus();
   const pick=Q.pick&&Q.pick.n===v?Q.pick:null,sameName=v.toLowerCase()===t.function.toLowerCase(),samePath=!pick||H(pick.p)===H(t.path);
   if(sameName&&samePath)return settle(Q.miss||Q.hint?1:2,"✓ Right:");
-  Q.miss++;const said=`<code>${esc(v)}()</code>${pick?` in ${esc(short(pick.p))}`:""}`;
+  Q.miss++;const said=`<code>${esc(v)}</code>${pick?` in ${esc(short(pick.p))}`:""}`;
   if(Q.miss>=2)return settle(0,`✗ Not ${said}. It was`);
   qin.value="";Q.pick=null;closeAC();
   fb("no",sameName?`Right name, but ${said} is a different function with that name. One more try.`:`✗ Not ${said}. One more try, or use Hint.`);qin.focus()}
@@ -241,10 +244,10 @@ const appEl=document.getElementById("app");
 async function startQuiz(fi,fresh){viewing=false;if(iso.fi!==null)await unisolate();if(mode==="2d")await to3D();
   if(P.fi!==fi)openPlayer(fi);pause();const run=!fresh&&L.run?.fi===fi?L.run:null;
   Object.assign(Q,{on:true,fi,answered:new Map(run?.answered||[]),pts:run?.pts||0,right:run?.right||0,hint:false,miss:0,pick:null});keep();
-  pl.classList.add("quiz");appEl.classList.add("quizzing");box.hidden=false;qfb.hidden=true;modeBtn.disabled=true;
+  pl.classList.add("quiz");appEl.classList.add("quizzing");if(app.clientWidth<=700&&!mini){setMin(true);Q.restore=true}box.hidden=false;qfb.hidden=true;modeBtn.disabled=true;
   let j=1;const N=D.flows[fi].steps.length;while(j<N&&Q.answered.has(j))j++;await _gotoStep(j-1);renderQ();qin.focus()}
-function endQuiz(){if(!Q.on)return;Q.on=false;pl.classList.remove("quiz","qok","qno");appEl.classList.remove("quizzing");box.hidden=true;modeBtn.disabled=false;closeAC();
-  open.tags.forEach(t=>t.el.classList.remove("qhide"));
+function endQuiz(){if(!Q.on)return;Q.on=false;if(Q.restore){Q.restore=false;setMin(false)}pl.classList.remove("quiz","qok","qno");appEl.classList.remove("quizzing");box.hidden=true;modeBtn.disabled=false;closeAC();
+  
   const F=D.flows[Q.fi];[...$("plTrack").children].forEach((b,k)=>{b.classList.remove("ahead");b.title=`${k+1}. ${F.steps[k].function}()`})}
 // while quizzing: no autoplay, and no jumping ahead of what has been answered
 const _gotoStep=gotoStep;gotoStep=function(k){if(Q.on&&!advancing){qfb.hidden=true;Q.miss=0;Q.hint=false;const N=D.flows[Q.fi].steps.length;k=Math.max(0,Math.min(N-1,k));
