@@ -136,7 +136,7 @@ const BADGES=[
    need:3,items:()=>[...ghosts].map(k=>{const [p,n]=k.split("::");return {label:n+"()",sub:short(p),ok:true,go:()=>showFn(p,n)}})},
   {id:"src",ic:"🔎",t:"Source diver",why:"Open the real source on GitHub from the city.",need:3,count:()=>L.gh},
   {id:"diagram",ic:"⧉",t:"Diagram maker",why:"Extract a flow as a 2D diagram you can save as an image or paste into docs.",need:1,count:()=>+L.diagram},
-].filter(Boolean);
+].filter(b=>b&&prog(b).of>0);  // a badge with nothing to earn yet (a city still building has no flows) is left out
 const CORE=["map","doors","main","ride","quiz"];
 function prog(b){if(b.count){const n=Math.min(b.need,b.count());return {n,of:b.need}}
   const it=b.items(),of=b.need||it.length;return {n:Math.min(of,it.filter(x=>x.ok).length),of,it}}
