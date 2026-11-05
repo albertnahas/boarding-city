@@ -28,6 +28,7 @@ Boarding City turns a JavaScript/TypeScript repository into a 3D city you can ex
 - **The Daily Commit.** A tabloid front page built from real numbers in the codebase ("APP.TSX HITS 11,499 LINES, STILL NO FINAL CHAPTER").
 - **Ghost town.** Tumbleweeds roll past code that no user action reaches.
 - **Navigation.** On-screen zoom, pan and rotate controls, keyboard shortcuts (press `?`) and fullscreen.
+- **Find.** Jump to any district, file or function by name (press `/`).
 
 ## Quickstart
 

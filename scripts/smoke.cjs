@@ -29,7 +29,7 @@ const repos = JSON.parse(fs.readFileSync(path.join(site, "repos.json"), "utf8"))
     p.on("console", m => m.type() === "error" && errs.push(m.text()));
     await p.goto("file://" + path.join(site, r.key, "demo.html"));
     await p.waitForTimeout(4000);
-    const ui = await p.evaluate(() => ["fogHud", "nav", "paperBtn", "galleryBtn", "player"].filter(id => !document.getElementById(id)));
+    const ui = await p.evaluate(() => ["fogHud", "nav", "find", "paperBtn", "galleryBtn", "player"].filter(id => !document.getElementById(id)));
     await p.click("#paperBtn"); await p.waitForTimeout(500);
     const paperOpen = await p.evaluate(() => !!document.querySelector("#paper") && getComputedStyle(document.querySelector("#paper")).display !== "none");
     await p.click("#paperClose").catch(() => {});
