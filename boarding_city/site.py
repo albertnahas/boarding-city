@@ -1,6 +1,6 @@
 """Render a city into site/<key>/ and keep site/repos.json and the repo list in site/index.html in sync."""
 import json, shutil
-from . import config, inject_fog, inject_nav, inject_search
+from . import config, inject_fog, inject_nav, inject_search, inject_learn
 
 TEXTURES = ["d0.jpg", "d1.jpg", "d2.jpg", "d3.jpg"]
 
@@ -15,6 +15,7 @@ def render(data, out_dir):
     inject_fog.main(str(tmp), str(fog))
     inject_nav.main(str(fog), str(out_dir / "demo.html"))
     inject_search.main(str(out_dir / "demo.html"), str(out_dir / "demo.html"))
+    inject_learn.main(str(out_dir / "demo.html"), str(out_dir / "demo.html"))
     tmp.unlink()
     fog.unlink()
     for t in TEXTURES:
