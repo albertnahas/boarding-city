@@ -1,7 +1,5 @@
 # Boarding City
 
-**Next stop: understanding.**
-
 Boarding City turns a JavaScript/TypeScript repository into a 3D city you can explore. Files are buildings, functions are floors, folders are districts. Then it walks you through real user actions, like "draw a rectangle" or "create a table", step by step through the code.
 
 ![Boarding City: a walkthrough of Excalidraw's "Export as PNG"](docs/screenshot.png)

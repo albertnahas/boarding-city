@@ -57,7 +57,7 @@ def build(spec, n_flows, key, out):
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="boarding_city", description="Boarding City: explore a codebase as a 3D city. Next stop: understanding.")
+    ap = argparse.ArgumentParser(prog="boarding_city", description="Boarding City: explore a codebase as a 3D city.")
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build", help="map a GitHub JS/TS repo into site/<key>/")
     b.add_argument("repo", help="owner/name or https://github.com/owner/name")

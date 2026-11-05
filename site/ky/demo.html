@@ -202,6 +202,14 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 #player.qok{box-shadow:0 0 0 2px #34d399,0 0 24px #34d39955}#player.qno{box-shadow:0 0 0 2px #f43f5e,0 0 24px #f43f5e55}
 @keyframes qzShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 @media (max-width:700px){#qzList{bottom:auto;top:calc(100% + 4px)}}
+#tour{position:absolute;z-index:11;left:274px;right:364px;max-width:640px;margin:0 auto;background:#0f1424f2;border:1px solid #5eead466;border-radius:12px;padding:10px 14px 12px;box-shadow:0 10px 30px #0008;backdrop-filter:blur(6px)}
+#tour[hidden]{display:none}#tour .tt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+#tour .tt b{font-size:15px;color:var(--acc)}#tour .tt span{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+#tour p{margin:4px 0 8px;font-size:14px;line-height:1.45}
+#tour .tb{display:flex;gap:6px;flex-wrap:wrap;align-items:center}#tour .th{font-size:12px;color:var(--mute)}#tour .tb button{padding:4px 10px;font-size:12.5px}
+#tour i{display:block;height:3px;border-radius:2px;background:#ffffff14;margin-top:9px;overflow:hidden}#tour i u{display:block;height:100%;width:0;background:var(--acc);transition:width .1s linear}
+.ob-tour{width:100%;margin:2px 0 10px;padding:8px;font-weight:700}
+@media (max-width:900px){#tour{left:8px;right:8px}}
 @media (prefers-reduced-motion:reduce){#qzFb.no{animation:none}#learnToast{transition:none}}/* /learn-css */</style></head><body>
 <div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D diagram</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button></div><div id="hover"></div><!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><button id="fhReset" title="Hide everything again">Reset fog</button></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->
 <div id="paper" hidden role="dialog" aria-modal="true" aria-label="The Daily Commit"><article class="sheet"><button id="paperClose" aria-label="Close the paper">✕</button>
@@ -1211,13 +1219,14 @@ let viewing=false;
 function showOnboarding(){stopFlow();closeBuilding();highlight(null);clearArcs();setMin(false);viewing=true;
   const q=overall(),open=new Set([...panel.querySelectorAll(".ob-badge[open]")].map(d=>d.dataset.id));
   crumb([["City",showCity],["My onboarding"]]);
-  panel.innerHTML=`<h2>My onboarding</h2><div class="ob-top"><div class="ob-ring" style="background:conic-gradient(var(--acc) ${q*3.6}deg,#ffffff14 0)"><span>${q}%</span></div>
+  panel.innerHTML=`<h2>My onboarding</h2><button type="button" class="primary ob-tour">▶ Play the guided tour</button><div class="ob-top"><div class="ob-ring" style="background:conic-gradient(var(--acc) ${q*3.6}deg,#ffffff14 0)"><span>${q}%</span></div>
     <div class="sub">${won.size} of ${BADGES.length} badges in ${esc(D.repo)}. ${ready()?"🎓 <b>Ready for your first change.</b> You know where features start, what everything depends on and how the main flows run.":"Earn the 5 core badges to be ready for your first change."}</div></div>`+
     BADGES.map(b=>{const r=prog(b),w=won.has(b.id);
       return `<details class="ob-badge${w?" won":""}" data-id="${b.id}"${open.has(b.id)?" open":""}><summary><span class="ic" aria-hidden="true">${b.ic}</span><span class="t">${esc(b.t)}${CORE.includes(b.id)?' <span class="core">core</span>':""}</span><span class="n">${r.n}/${r.of}${w?" ✓":""}</span><span class="why">${esc(b.why)}</span></summary>
         <div class="ob-bar"><u style="width:${100*r.n/r.of}%"></u></div>${r.it&&r.it.length?`<ul class="ob-items">${r.it.map((x,k)=>`<li class="${x.ok?"ok":""}" data-k="${k}" tabindex="0" role="button"><i>${x.ok?"✓":"○"}</i><span>${esc(x.label)}</span><small>${esc(x.sub||"")}</small></li>`).join("")}</ul>`:""}</details>`}).join("")+
     `<button class="ob-reset" type="button">Reset my onboarding progress</button>`;
   panel.querySelectorAll(".ob-badge").forEach(d=>{const b=BADGES.find(x=>x.id===d.dataset.id);d.querySelectorAll(".ob-items li").forEach(li=>{li.onclick=()=>{viewing=false;prog(b).it[+li.dataset.k].go()};li.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();li.click()}}})});
+  panel.querySelector(".ob-tour").onclick=()=>{viewing=false;startTour()};
   panel.querySelector(".ob-reset").onclick=()=>{if(!confirmReset())return;files.clear();fns.clear();flowsSeen.clear();ghosts.clear();won.clear();Object.assign(L,{quiz:{},gh:0,diagram:false});delete L.run;save();renderBtn();showOnboarding()}}
 let armed=0;function confirmReset(){const b=panel.querySelector(".ob-reset");if(Date.now()-armed<4000)return true;armed=Date.now();b.textContent="Click again to erase all progress";return false}
 function renderBtn(){btn.innerHTML=`🎓 Onboarding <b>${overall()}%</b>`}
@@ -1307,7 +1316,7 @@ $q("qzHint").onclick=()=>{if(!open_())return;Q.hint=true;renderQ();qin.focus()};
 $q("qzSkip").onclick=()=>{if(open_())settle(0,"It was")};
 $q("qzExit").onclick=()=>endQuiz();
 const appEl=document.getElementById("app");
-async function startQuiz(fi,fresh){viewing=false;if(iso.fi!==null)await unisolate();if(mode==="2d")await to3D();
+async function startQuiz(fi,fresh){viewing=false;if(T.on)stopTour();if(iso.fi!==null)await unisolate();if(mode==="2d")await to3D();
   if(P.fi!==fi)openPlayer(fi);pause();const run=!fresh&&L.run?.fi===fi?L.run:null;
   Object.assign(Q,{on:true,fi,answered:new Map(run?.answered||[]),pts:run?.pts||0,right:run?.right||0,hint:false,miss:0,pick:null});keep();
   pl.classList.add("quiz");appEl.classList.add("quizzing");if(app.clientWidth<=700&&!mini){setMin(true);Q.restore=true}box.hidden=false;qfb.hidden=true;modeBtn.disabled=true;
@@ -1327,8 +1336,41 @@ const _showGallery=showGallery;showGallery=function(){viewing=false;setMin(false
   panel.querySelectorAll("li.flowitem").forEach(li=>{const fi=+li.dataset.fi,b=document.createElement("button");b.type="button";b.className="qzGo";
     b.textContent=quizLabel(fi);b.onclick=e=>{e.stopPropagation();startQuiz(fi)};li.querySelector(".isoLink")?.before(b)});return r};
 document.getElementById("galleryBtn").onclick=showGallery;  // the button was bound to the unwrapped function
+// ---- the guided tour: onboarding that plays itself. It starts on a first visit (or with #tour in the URL):
+// the city, each district, the front doors, the main streets, then the first walkthroughs, narrated ----
+const T={on:false,paused:false,run:0,skip:null};
+const tourEl=document.createElement("div");tourEl.id="tour";tourEl.hidden=true;
+tourEl.innerHTML=`<div class="tt"><b id="tourT"></b><span id="tourN"></span></div><p id="tourP" role="status"></p><div class="tb"><button type="button" id="tourPause" title="Pause the tour">⏸ Pause</button><button type="button" id="tourSkip" title="Next stop of the tour">Next ▸</button><button type="button" id="tourStop">✕ End tour</button><span class="th">or click anywhere to explore on your own</span></div><i><u id="tourBar"></u></i>`;
+app.appendChild(tourEl);const tbar=$q("tourBar");
+function stops(){const S=[{t:D.repo,p:D.app,go:showCity,ms:7000}],sum=p=>byPath[H(p)]?.summary||"";
+  D.districts.slice(0,8).forEach((d,i)=>S.push({t:`District: ${d.name}`,p:d.summary,go:()=>showDistrict(i),ms:5000}));
+  ENTRY.slice(0,3).forEach(x=>S.push({t:`Front door: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
+  MAIN.slice(0,3).forEach(x=>S.push({t:`Main street: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
+  flowIdx.filter(fi=>!D.flows[fi].extra).slice(0,2).forEach(fi=>S.push({t:`Walkthrough: ${D.flows[fi].title}`,p:D.flows[fi].desc,flow:fi}));
+  S.push({t:"Tour done",p:"Check what stuck: take the “what runs next?” quiz on a flow, and earn the core badges to be ready for your first change.",go:showOnboarding,ms:8000});return S}
+// time that only runs while the tour plays; Next or End resolve it early
+function hold(ms,run){return new Promise(ok=>{let left=ms,last=performance.now();T.skip=ok;
+  const f=()=>{if(run!==T.run)return ok();const now=performance.now();if(!T.paused)left-=now-last;last=now;tbar.style.width=Math.min(100,100*(1-left/ms))+"%";left<=0?ok():setTimeout(f,100)};f()})}
+function ride(fi,run){return new Promise(ok=>{T.skip=ok;startFlow(fi);const f=()=>{if(run!==T.run||P.fi!==fi||P.ended)return ok();
+  const N=D.flows[fi].steps.length;tbar.style.width=100*(P.k+1)/N+"%";setTimeout(f,200)};setTimeout(f,400)})}
+function placeTour(){const b=document.getElementById("bar").getBoundingClientRect(),a=app.getBoundingClientRect();tourEl.style.top=(b.bottom-a.top+8)+"px"}
+async function startTour(){if(Q.on)endQuiz();const run=++T.run;T.on=true;T.paused=false;L.toured=true;save();tourEl.hidden=false;setMin(false);renderPause();
+  const S=stops();for(let i=0;i<S.length&&run===T.run;i++){const s=S[i];placeTour();
+    $q("tourT").textContent=s.t;$q("tourN").textContent=`${i+1}/${S.length}`;$q("tourP").textContent=s.p;tbar.style.width="0";
+    if(s.flow!==undefined)await ride(s.flow,run);else{s.go();await hold(s.ms,run)}}
+  if(run===T.run)stopTour(true)}
+function stopTour(done){T.run++;T.on=false;tourEl.hidden=true;if(!done&&P.playing)pause()}
+function renderPause(){$q("tourPause").textContent=T.paused?"⏵ Play":"⏸ Pause"}
+$q("tourPause").onclick=()=>{T.paused=!T.paused;renderPause();if(P.fi!==null)T.paused?pause():play()};
+$q("tourSkip").onclick=()=>{if(P.fi!==null)stopFlow();T.paused=false;renderPause();T.skip?.()};
+$q("tourStop").onclick=()=>stopTour();
+addEventListener("resize",()=>{if(T.on)placeTour()});
+// taking the controls ends the tour: any click or key outside it
+app.addEventListener("pointerdown",e=>{if(T.on&&!e.target.closest("#tour"))stopTour()},true);
+addEventListener("keydown",e=>{if(T.on&&!e.target.closest?.("#tour"))stopTour()},true);
+if(location.hash==="#tour"||!L.toured&&!location.hash)setTimeout(startTour,1200);
 window.cityAPI=Object.assign(window.cityAPI||{},{learn:{state:()=>({pct:overall(),won:[...won],badges:BADGES.map(b=>({id:b.id,...prog(b),it:undefined})),quiz:{...Q,answered:[...Q.answered]},min:mini}),
-  show:showOnboarding,quiz:startQuiz}});
+  show:showOnboarding,quiz:startQuiz,tour:startTour}});
 }
 /* /learn */
 </script></body></html>
