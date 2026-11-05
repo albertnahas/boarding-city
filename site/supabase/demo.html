@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-azFyu9bO9qDLKo9+HLkDd/2Jkm0b9J4/hitLXmIcQ2I=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Code City</title>
 <style>
 :root{--bg:#0a0d16;--panel:#121726ee;--ink:#e8ecf5;--mute:#8b93a7;--acc:#5eead4;--flow:#fbbf24}
@@ -127,7 +127,7 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 #navHelp dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
 #navHelp dt{font:600 11.5px ui-monospace,Menlo,monospace;color:var(--acc);white-space:nowrap}#navHelp dd{margin:0;color:#cbd5e1}
 #nav .mini{display:none}
-@media (max-width:700px){#nav{gap:6px}#nav .mini{display:grid}#nav:not(.open) .rot,#nav:not(.open) .pad{display:none}#nav.open .pad [data-act="help"]{visibility:hidden}}/* /nav-css *//* search-css */#bar:focus-within{z-index:12}
+@media (max-width:700px){#nav{gap:6px}#nav .mini{display:grid}#nav:not(.open) .rot,#nav:not(.open) .pad{display:none}#nav.open .pad [data-act="help"]{visibility:hidden}}/* /nav-css *//* search-css */#bar:focus-within,#bar:has(#findList:not([hidden])){z-index:12}
 #find{position:relative;display:flex}
 #findIn{width:230px;height:34px;box-sizing:border-box;padding:0 30px 0 32px;border-radius:8px;border:1px solid #ffffff26;background:#121726e6 no-repeat 10px 50%/14px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='6.5' cy='6.5' r='5' fill='none' stroke='%238b93a7' stroke-width='1.8'/%3E%3Cpath d='M10.5 10.5 15 15' stroke='%238b93a7' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");color:var(--ink);font:13px system-ui,sans-serif;backdrop-filter:blur(6px)}
 #findIn::placeholder{color:#8b93a7}
@@ -248,7 +248,7 @@ const heightOf=lines=>Math.max(0.6,0.34*Math.sqrt(lines));
 D.districts.forEach((d,i)=>{
   const n=d.files.length,cols=Math.ceil(Math.sqrt(n)),rows=Math.ceil(n/cols),size=sizes[i],c=i%COLS,r=Math.floor(i/COLS);
   const cx=-W/2+colW.slice(0,c).reduce((a,b)=>a+b,0)+GAP*c+colW[c]/2,cz=-HH/2+rowH.slice(0,r).reduce((a,b)=>a+b,0)+GAP*r+rowH[r]/2;
-  const tex=loader.load(`d${i%4}.jpg`);tex.colorSpace=THREE.SRGBColorSpace;
+  const tex=loader.load(`${D.texBase||""}d${i%4}.jpg`);tex.colorSpace=THREE.SRGBColorSpace;
   const plate=new THREE.Mesh(new THREE.BoxGeometry(size,0.3,size),[0,0,new THREE.MeshStandardMaterial({map:tex,roughness:.9}),0,0,0].map(m=>m||new THREE.MeshStandardMaterial({color:COLORS[i],roughness:.8})));
   plate.position.set(cx,0,cz);plate.userData={kind:"district",i};scene.add(plate);pickables.push(plate);
   d.center=new THREE.Vector3(cx,0,cz);d.size=size;
@@ -279,7 +279,7 @@ scene.fog=new THREE.Fog(0x0a0d16,EXT*1.1,EXT*3);controls.maxDistance=EXT*2.2;
 tags.forEach(t=>t.city=true);
 // ---- city layers: every layer comes from static analysis of the source (layers.py), never decoration ----
 const LY=D.layers,home=D.home||{},bOf=p=>buildings[home[p]||p],dOf=p=>fileDistrict[home[p]||p];
-const ON={roads:true,traffic:true,metro:true,ghost:true,buses:false,flights:false,power:false,cranes:false,night:false};
+const ON={roads:true,traffic:true,metro:true,ghost:true,buses:false,flights:false,power:false,cranes:false,night:false};Object.assign(ON,D.layersOn||{});
 const LG={};for(const k of ["roads","traffic","buses","flights","power","cranes","ghost"]){const g=new THREE.Group();g.visible=false;scene.add(g);LG[k]=g}
 const DETAIL=new THREE.Group(),LAND=new THREE.Group();scene.add(DETAIL,LAND);
 const dummy=new THREE.Object3D(),V=(x,y,z)=>new THREE.Vector3(x,y,z);
@@ -497,7 +497,7 @@ function ballAt(p,list){const m=new THREE.Mesh(new THREE.SphereGeometry(.28,16,1
 
 // ---- selection + panel ----
 let sel=null,arcs=[];
-const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 function highlight(mesh){if(sel)sel.material.emissive.setHex(0);sel=mesh;if(mesh)mesh.material.emissive.setHex(0x444444)}
 function clearArcs(){arcs.forEach(a=>scene.remove(a));arcs=[];metroTags.forEach(t=>{t.el.remove();tags.splice(tags.indexOf(t),1)});metroTags.length=0}
@@ -509,7 +509,7 @@ function showCity(){stopFlow();closeBuilding();highlight(null);clearArcs();if(mo
   panel.innerHTML=`<h2>${esc(D.repo)}</h2><div class="sub">${esc(D.app)}</div><ul class="list">${D.districts.map((d,i)=>`<li data-i="${i}"><b style="color:#${COLORS[i].toString(16)}">${esc(d.name)}</b><span>${esc(d.summary)} · ${(d.total??d.files.length).toLocaleString()} files</span></li>`).join("")}</ul>`;
   panel.querySelectorAll("li").forEach(li=>li.onclick=()=>showDistrict(+li.dataset.i))}
 function showDistrict(i){stopFlow();closeBuilding();highlight(null);clearArcs();const d=D.districts[i];if(mode==="3d")fly(d.center,d.size*1.35);crumb([["City",showCity],[d.name]]);
-  panel.innerHTML=`<h2>${esc(d.name)}</h2><div class="sub">${esc(d.summary)}</div><ul class="list">${d.files.map(p=>`<li data-p="${p}"><b>${esc(short(p))}</b><span>${esc(byPath[p].summary)} · ${byPath[p].lines} lines</span></li>`).join("")}</ul>`;
+  panel.innerHTML=`<h2>${esc(d.name)}</h2><div class="sub">${esc(d.summary)}</div><ul class="list">${d.files.map(p=>`<li data-p="${esc(p)}"><b>${esc(short(p))}</b><span>${esc(byPath[p].summary)} · ${byPath[p].lines} lines</span></li>`).join("")}</ul>`;
   panel.querySelectorAll("li").forEach(li=>li.onclick=()=>showFile(li.dataset.p))}
 function showFile(p,keepFlow){if(!keepFlow)stopFlow();const f=byPath[p],b=buildings[p],i=fileDistrict[p];highlight(null);clearArcs();
   if(mode!=="3d"){const bx=two.boxes.find(x=>x.path===p);if(bx&&mode==="2d")view2D(fitCenter(new THREE.Vector3(bx.x,0,(bx.z0+bx.z1)/2),camH()),camH(),600)}
@@ -1098,7 +1098,9 @@ setInterval(()=>{if(flow.on)lastFi=flow.fi;
   if(window.cityAPI?.flow?.state?.().ended&&!hinted&&isoEl.hidden){hinted=true;try{localStorage.setItem("bc-extract-hint","1")}catch{};toast.hidden=false;setTimeout(()=>toast.hidden=true,7000)}
   const ready=selected()!=null;xBtn.classList.toggle("ready",ready);xBtn.setAttribute("aria-label",ready?`Extract “${D.flows[selected()].title}” as a diagram`:"Extract a flow as a diagram")},250);
 window.cityAPI=Object.assign(window.cityAPI||{},{extract,zoomBy,rotateBy,panBy,reset,fit,focus,key,
-  state:()=>({view:view(),pos:camera.position.toArray().map(v=>+v.toFixed(3)),target:controls.target.toArray().map(v=>+v.toFixed(3)),iso:{...isoT},help:!help.hidden})});
+  state:()=>({view:view(),pos:camera.position.toArray().map(v=>+v.toFixed(3)),target:controls.target.toArray().map(v=>+v.toFixed(3)),iso:{...isoT},help:!help.hidden}),
+  // restores a camera saved with state(): the app shell uses it to refresh a city that is still being built without moving the viewer
+  setView:s=>{if(view()!=="3d"||!s?.pos||!s?.target)return;camera.position.fromArray(s.pos);controls.target.fromArray(s.target);controls.update()}});
 }
 /* /nav-controls */
 /* search */
@@ -1159,7 +1161,7 @@ const H=p=>home[p]||p,hexOf=i=>"#"+COLORS[i%COLORS.length].toString(16).padStart
 
 // ---- GitHub links: every file and function opens at the exact commit the city was built from ----
 const ghURL=(p,line)=>D.meta?.repo&&`https://github.com/${D.meta.repo}/blob/${D.meta.sha}/${p.split("/").map(encodeURIComponent).join("/")}${line?"#L"+line:""}`;
-const ghA=(p,line,label="GitHub ↗")=>{const u=ghURL(p,line);return u?`<a class="gh" href="${u}" target="_blank" rel="noopener" title="Open ${esc(p)}${line?" at line "+line:""} on GitHub">${label}</a>`:""};
+const ghA=(p,line,label="GitHub ↗")=>{const u=ghURL(p,line);return u?`<a class="gh" href="${esc(u)}" target="_blank" rel="noopener" title="Open ${esc(p)}${line?" at line "+line:""} on GitHub">${label}</a>`:""};
 panel.addEventListener("click",e=>{const a=e.target.closest("a.gh");if(!a)return;e.stopPropagation();L.gh++;save();check()});
 function linkFile(p){const f=byPath[p],sub=panel.querySelector("h2+.sub");
   if(!f.cluster){if(sub)sub.insertAdjacentHTML("beforeend"," · "+ghA(p));return}
@@ -1368,7 +1370,8 @@ addEventListener("resize",()=>{if(T.on)placeTour()});
 // taking the controls ends the tour: any click or key outside it
 app.addEventListener("pointerdown",e=>{if(T.on&&!e.target.closest("#tour"))stopTour()},true);
 addEventListener("keydown",e=>{if(T.on&&!e.target.closest?.("#tour"))stopTour()},true);
-if(location.hash==="#tour"||!L.toured&&!location.hash)setTimeout(startTour,1200);
+// a city still being built (a web-builder snapshot) never starts it: the finished city does
+if(!D.building&&(location.hash==="#tour"||!L.toured&&!location.hash))setTimeout(startTour,1200);
 window.cityAPI=Object.assign(window.cityAPI||{},{learn:{state:()=>({pct:overall(),won:[...won],badges:BADGES.map(b=>({id:b.id,...prog(b),it:undefined})),quiz:{...Q,answered:[...Q.answered]},min:mini}),
   show:showOnboarding,quiz:startQuiz,tour:startTour}});
 }

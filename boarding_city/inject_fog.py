@@ -164,18 +164,20 @@ milestones();renderHud();relabel();requestAnimationFrame(()=>requestAnimationFra
 """
 
 
-def main(src, dst):
-    h = open(src, encoding="utf-8").read()
+def inject(h):
     if "FOG-POC" in h:
-        sys.exit("already injected: run on a fresh build")
+        raise ValueError("already injected: run on a fresh build")
     end = "</script></body></html>"
     for anchor in ("</style></head>", '<div id="hover"></div>', end):
         if h.count(anchor) != 1:
-            sys.exit(f"anchor not found exactly once: {anchor}")
+            raise ValueError(f"anchor not found exactly once: {anchor}")
     h = h.replace("</style></head>", CSS + "</style></head>")
     h = h.replace('<div id="hover"></div>', '<div id="hover"></div>' + HTML)
-    h = h.replace(end, JS + end)
-    open(dst, "w", encoding="utf-8").write(h)
+    return h.replace(end, JS + end)
+
+
+def main(src, dst):
+    open(dst, "w", encoding="utf-8").write(inject(open(src, encoding="utf-8").read()))
     print(f"fog injected: {dst}")
 
 

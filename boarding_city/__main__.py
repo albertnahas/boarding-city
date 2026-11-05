@@ -1,6 +1,6 @@
 """Boarding City CLI.
 
-  python -m boarding_city build <owner/name | https://github.com/owner/name> [--flows N] [--key KEY] [--out DIR]
+  python -m boarding_city build <owner/name[@ref] | https://github.com/owner/name[/tree/<ref>]> [--flows N] [--key KEY] [--out DIR]
   python -m boarding_city site      regenerate site/index.html's repo list from site/repos.json
 
 Every step's output is cached in .cache/<owner>__<name>/<commit>/, so re-running a build for the same commit is free.
@@ -9,7 +9,7 @@ import argparse, json, re, sys, time
 from pathlib import Path
 from . import config, repo as gitrepo, extract, flows as fl, graph, reach, layers, tabloid, city, site
 from .districts import Districts
-from .llm import spent
+from .llm import LLMError, spent
 
 
 def step(work, name, fn):
@@ -24,10 +24,13 @@ def step(work, name, fn):
 
 
 def build(spec, n_flows, key, out):
-    owner, name = gitrepo.parse(spec)
-    repo = f"{owner}/{name}"
-    key = key or re.sub(r"[^a-z0-9]", "", name.lower()) or "repo"
-    work, sha = gitrepo.checkout(owner, name)
+    try:
+        owner, name, ref = gitrepo.parse(spec)
+        repo = f"{owner}/{name}"
+        key = key or re.sub(r"[^a-z0-9]", "", name.lower()) or "repo"
+        work, sha = gitrepo.checkout(owner, name, ref)
+    except (ValueError, LookupError) as e:
+        raise SystemExit(str(e))
     src = work / "src"
     print(f"{repo} @ {sha}  ->  {work}")
     paths = gitrepo.source_files(src)
@@ -60,14 +63,17 @@ def main():
     ap = argparse.ArgumentParser(prog="boarding_city", description="Boarding City: explore a codebase as a 3D city.")
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build", help="map a GitHub JS/TS repo into site/<key>/")
-    b.add_argument("repo", help="owner/name or https://github.com/owner/name")
+    b.add_argument("repo", help="owner/name or https://github.com/owner/name, optionally pinned: owner/name@<sha|branch|tag>")
     b.add_argument("--flows", type=int, default=6, help="walkthroughs to propose and trace (default 6)")
     b.add_argument("--key", help="short id used in the URL (default: the repo name)")
     b.add_argument("--out", help="output folder (default: site/<key>)")
     sub.add_parser("site", help="regenerate site/index.html's repo list from site/repos.json")
     a = ap.parse_args()
     if a.cmd == "build":
-        build(a.repo, a.flows, a.key, a.out)
+        try:
+            build(a.repo, a.flows, a.key, a.out)
+        except LLMError as e:
+            raise SystemExit(f"AI call failed: {e}")
     else:
         site.write_index()
 

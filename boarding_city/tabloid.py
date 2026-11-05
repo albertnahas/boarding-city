@@ -42,7 +42,7 @@ def paper(work, repo, F):
     schema = {"type": "object", "additionalProperties": False, "required": ["items"], "properties": {"items": {"type": "array", "items": {
         "type": "object", "additionalProperties": False, "required": ["id", "headline", "deck"],
         "properties": {"id": {"type": "string", "enum": [f["id"] for f in F]}, "headline": {"type": "string"}, "deck": {"type": "string"}}}}}}
-    items = ask(work, config.FAST_MODEL, f"""You write the front page of "The Daily Commit", a playful tabloid about the {repo} codebase seen as a city.
+    items = ask(work, config.model("fast"), f"""You write the front page of "The Daily Commit", a playful tabloid about the {repo} codebase seen as a city.
 For EACH fact write: headline (UPPERCASE, max 10 words, tabloid wit, e.g. "LOCAL HELPER CALLED 5,603 TIMES, STILL NO PROMOTION") and deck (one plain sentence, max 18 words, saying the fact straight).
 Rules: keep every number EXACTLY as given; be kind: joke about the code, never about people; never name contributors or invent facts.
 

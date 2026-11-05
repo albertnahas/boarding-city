@@ -136,14 +136,15 @@ setInterval(()=>{if(flow.on)lastFi=flow.fi;
   if(window.cityAPI?.flow?.state?.().ended&&!hinted&&isoEl.hidden){hinted=true;try{localStorage.setItem("bc-extract-hint","1")}catch{};toast.hidden=false;setTimeout(()=>toast.hidden=true,7000)}
   const ready=selected()!=null;xBtn.classList.toggle("ready",ready);xBtn.setAttribute("aria-label",ready?`Extract “${D.flows[selected()].title}” as a diagram`:"Extract a flow as a diagram")},250);
 window.cityAPI=Object.assign(window.cityAPI||{},{extract,zoomBy,rotateBy,panBy,reset,fit,focus,key,
-  state:()=>({view:view(),pos:camera.position.toArray().map(v=>+v.toFixed(3)),target:controls.target.toArray().map(v=>+v.toFixed(3)),iso:{...isoT},help:!help.hidden})});
+  state:()=>({view:view(),pos:camera.position.toArray().map(v=>+v.toFixed(3)),target:controls.target.toArray().map(v=>+v.toFixed(3)),iso:{...isoT},help:!help.hidden}),
+  // restores a camera saved with state(): the app shell uses it to refresh a city that is still being built without moving the viewer
+  setView:s=>{if(view()!=="3d"||!s?.pos||!s?.target)return;camera.position.fromArray(s.pos);controls.target.fromArray(s.target);controls.update()}});
 }
 /* /nav-controls */
 """
 
 
-def main(src, out):
-    h = open(src, encoding="utf-8").read()
+def inject(h):
     # re-running on an already injected page replaces the previous injection
     for a, b in ((MARK, END), (CSS_MARK, CSS_END)):
         while a in h:
@@ -156,8 +157,11 @@ def main(src, out):
     h = h[:style_end] + "\n" + CSS_MARK + CSS.strip() + CSS_END + h[style_end:]
     module = h.index('<script type="module">')
     end = h.index("</script>", module)
-    h = h[:end] + js + h[end:]
-    open(out, "w", encoding="utf-8").write(h)
+    return h[:end] + js + h[end:]
+
+
+def main(src, out):
+    open(out, "w", encoding="utf-8").write(inject(open(src, encoding="utf-8").read()))
     print(f"{out}: navigation controls added")
 
 

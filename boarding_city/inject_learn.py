@@ -93,7 +93,7 @@ const H=p=>home[p]||p,hexOf=i=>"#"+COLORS[i%COLORS.length].toString(16).padStart
 
 // ---- GitHub links: every file and function opens at the exact commit the city was built from ----
 const ghURL=(p,line)=>D.meta?.repo&&`https://github.com/${D.meta.repo}/blob/${D.meta.sha}/${p.split("/").map(encodeURIComponent).join("/")}${line?"#L"+line:""}`;
-const ghA=(p,line,label="GitHub ↗")=>{const u=ghURL(p,line);return u?`<a class="gh" href="${u}" target="_blank" rel="noopener" title="Open ${esc(p)}${line?" at line "+line:""} on GitHub">${label}</a>`:""};
+const ghA=(p,line,label="GitHub ↗")=>{const u=ghURL(p,line);return u?`<a class="gh" href="${esc(u)}" target="_blank" rel="noopener" title="Open ${esc(p)}${line?" at line "+line:""} on GitHub">${label}</a>`:""};
 panel.addEventListener("click",e=>{const a=e.target.closest("a.gh");if(!a)return;e.stopPropagation();L.gh++;save();check()});
 function linkFile(p){const f=byPath[p],sub=panel.querySelector("h2+.sub");
   if(!f.cluster){if(sub)sub.insertAdjacentHTML("beforeend"," · "+ghA(p));return}
@@ -302,7 +302,8 @@ addEventListener("resize",()=>{if(T.on)placeTour()});
 // taking the controls ends the tour: any click or key outside it
 app.addEventListener("pointerdown",e=>{if(T.on&&!e.target.closest("#tour"))stopTour()},true);
 addEventListener("keydown",e=>{if(T.on&&!e.target.closest?.("#tour"))stopTour()},true);
-if(location.hash==="#tour"||!L.toured&&!location.hash)setTimeout(startTour,1200);
+// a city still being built (a web-builder snapshot) never starts it: the finished city does
+if(!D.building&&(location.hash==="#tour"||!L.toured&&!location.hash))setTimeout(startTour,1200);
 window.cityAPI=Object.assign(window.cityAPI||{},{learn:{state:()=>({pct:overall(),won:[...won],badges:BADGES.map(b=>({id:b.id,...prog(b),it:undefined})),quiz:{...Q,answered:[...Q.answered]},min:mini}),
   show:showOnboarding,quiz:startQuiz,tour:startTour}});
 }
@@ -310,8 +311,7 @@ window.cityAPI=Object.assign(window.cityAPI||{},{learn:{state:()=>({pct:overall(
 """
 
 
-def main(src, out):
-    h = open(src, encoding="utf-8").read()
+def inject(h):
     # re-running on an already injected page replaces the previous injection
     for a, b in ((MARK, END), (CSS_MARK, CSS_END)):
         while a in h:
@@ -320,8 +320,11 @@ def main(src, out):
     style_end = h.index("</style>")
     h = h[:style_end] + CSS_MARK + CSS.strip() + CSS_END + h[style_end:]
     end = h.index("</script>", h.index('<script type="module">'))
-    h = h[:end] + JS.strip() + "\n" + h[end:]
-    open(out, "w", encoding="utf-8").write(h)
+    return h[:end] + JS.strip() + "\n" + h[end:]
+
+
+def main(src, out):
+    open(out, "w", encoding="utf-8").write(inject(open(src, encoding="utf-8").read()))
     print(f"{out}: learning layer added")
 
 

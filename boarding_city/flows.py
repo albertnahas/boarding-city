@@ -4,7 +4,7 @@
   trace   (trace model): ordered steps over those files only; every step must be a function id from the listing
 then verify (no AI): drop steps that aren't real functions in that file, label each hop direct or indirect from the code.
 """
-import json, os, re
+import contextvars, json, os, re
 from concurrent.futures import ThreadPoolExecutor
 from . import config
 from .llm import ask
@@ -24,7 +24,7 @@ def propose(work, repo, S, n):
     schema = {"type": "object", "additionalProperties": False, "required": ["flows"], "properties": {"flows": {"type": "array", "items": {
         "type": "object", "additionalProperties": False, "required": ["title", "desc", "candidates"], "properties": {
             "title": {"type": "string"}, "desc": {"type": "string"}, "candidates": {"type": "array", "items": {"type": "string"}}}}}}}
-    out = ask(work, config.FAST_MODEL, f"""You map the {repo} codebase for a new developer's onboarding. Below is every source file{' with its line count and first function names' if small else ''}.
+    out = ask(work, config.model("fast"), f"""You map the {repo} codebase for a new developer's onboarding. Below is every source file{' with its line count and first function names' if small else ''}.
 Propose {n} user-facing actions a new developer would want explained end to end: everyday things a user (or an API caller, for a library) does, each traceable in this code.
 For each: title (max 5 words, imperative, e.g. "Add a text label"), desc (one plain sentence, max 16 words: what the user does and sees), candidates: the ~30 file paths most likely involved, from the first event handler or public entry function to the visible result. Use paths exactly as listed.
 
@@ -40,7 +40,7 @@ def _narrow(work, src, by, repo, fl):
         return " | ".join(l.strip() for l in _lines(src, p)[:40] if l.strip().startswith(("export", "function", "const", "class")))[:300]
     rows = "\n".join(f"{p} ({by[p]['lines']}L): fns {', '.join(x['name'] for x in by[p]['functions'][:30])[:400]} || {head(p)}" for p in fl["candidates"])
     sch = {"type": "object", "additionalProperties": False, "required": ["files"], "properties": {"files": {"type": "array", "items": {"type": "string", "enum": fl["candidates"]}}}}
-    out = ask(work, config.FAST_MODEL, f"""{repo}. User action: "{fl['title']}: {fl['desc']}". From these candidate files, pick the 8-12 that the action actually runs through, in execution order (UI or entry handler first, visible result last).
+    out = ask(work, config.model("fast"), f"""{repo}. User action: "{fl['title']}: {fl['desc']}". From these candidate files, pick the 8-12 that the action actually runs through, in execution order (UI or entry handler first, visible result last).
 
 {rows}""", sch, f"narrow {fl['title']}")
     return {**fl, "files": out["files"]}
@@ -60,21 +60,22 @@ def _trace(work, src, by, repo, fl):
         return {"title": fl["title"], "desc": fl["desc"], "steps": []}
     sch = {"type": "object", "additionalProperties": False, "required": ["steps"], "properties": {"steps": {"type": "array", "items": {
         "type": "object", "additionalProperties": False, "required": ["id", "narration"], "properties": {"id": {"type": "string", "enum": ids}, "narration": {"type": "string"}}}}}}
-    out = ask(work, config.TRACE_MODEL, f"""Trace this user action through the {repo} source, end to end, for a new developer: "{fl['title']}: {fl['desc']}".
+    out = ask(work, config.model("trace"), f"""Trace this user action through the {repo} source, end to end, for a new developer: "{fl['title']}: {fl['desc']}".
 Below: the relevant files with every function (line, declaration, and the functions it statically calls among these files, after →).
 Return 6-10 ordered steps from the first event handler or entry function to the visible result. Each step is one function id "path::name" from the listing; narration is one plain-English sentence (max 22 words). Prefer chains where each step calls the next; if a hop goes through an event, callback or state update, say so. Only use functions from the listing.
 
-""" + "\n\n".join(parts), sch, f"trace {fl['title']}", effort=config.TRACE_EFFORT)
+""" + "\n\n".join(parts), sch, f"trace {fl['title']}", effort=config.model("effort"))
     return {"title": fl["title"], "desc": fl["desc"],
             "steps": [{"path": s["id"].split("::")[0], "function": s["id"].split("::")[1], "narration": s["narration"]} for s in out["steps"]]}
 
 
 def trace_all(work, src, S, repo, proposed):
     by = {f["path"]: f for f in S}
+    ctx = contextvars.copy_context()  # worker threads keep this build's model settings
     with ThreadPoolExecutor(6) as ex:
-        narrowed = list(ex.map(lambda f: _narrow(work, src, by, repo, f), proposed))
+        narrowed = list(ex.map(lambda f: ctx.copy().run(_narrow, work, src, by, repo, f), proposed))
     with ThreadPoolExecutor(6) as ex:
-        return list(ex.map(lambda f: _trace(work, src, by, repo, f), narrowed))
+        return list(ex.map(lambda f: ctx.copy().run(_trace, work, src, by, repo, f), narrowed))
 
 
 def verify(src, S, raw):
@@ -134,7 +135,7 @@ def describe(work, repo, S, dist, targets):
                                                     "properties": {"index": {"type": "integer"}, "name": {"type": "string"}, "summary": {"type": "string"}}}},
            "files": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["path", "summary"],
                                                 "properties": {"path": {"type": "string", "enum": targets}, "summary": {"type": "string"}}}}}}
-    return ask(work, config.FAST_MODEL, f"""You map the {repo} codebase for a new developer. Return:
+    return ask(work, config.model("fast"), f"""You map the {repo} codebase for a new developer. Return:
 app: one plain sentence on what this code is;
 districts: for each district index 0-{len(dist.keys) - 1}, a short name (max 3 words, e.g. "Editor engine", "UI components") and one plain sentence on what lives there;
 files: a plain one-liner (max 14 words) for EACH of these {len(targets)} files: {', '.join(targets)}.

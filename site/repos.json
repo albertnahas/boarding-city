@@ -14,13 +14,5 @@
   "files": 6847,
   "flows": 6,
   "cost": 0.1
- },
- {
-  "key": "ky",
-  "repo": "sindresorhus/ky",
-  "sha": "3541888",
-  "files": 31,
-  "flows": 4,
-  "cost": 0.02
  }
 ]

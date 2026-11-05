@@ -1,23 +1,34 @@
 """Render a city into site/<key>/ and keep site/repos.json and the repo list in site/index.html in sync."""
-import json, shutil
+import base64, hashlib, json, re, shutil
 from . import config, inject_fog, inject_nav, inject_search, inject_learn
 
 TEXTURES = ["d0.jpg", "d1.jpg", "d2.jpg", "d3.jpg"]
 
 
-def render(data, out_dir):
-    out_dir.mkdir(parents=True, exist_ok=True)
-    tmp = out_dir / ".base.html"
-    fog = out_dir / ".fog.html"
+def page(data, fog=True):
+    """The city page for one city.json: the template with the data inlined, plus fog of war (optional), navigation, search and the learning layer."""
     # "</" is escaped so code snippets in the data can never close the page's <script>
     blob = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
-    tmp.write_text((config.ASSETS / "template.html").read_text().replace("__DATA__", blob))
-    inject_fog.main(str(tmp), str(fog))
-    inject_nav.main(str(fog), str(out_dir / "demo.html"))
-    inject_search.main(str(out_dir / "demo.html"), str(out_dir / "demo.html"))
-    inject_learn.main(str(out_dir / "demo.html"), str(out_dir / "demo.html"))
-    tmp.unlink()
-    fog.unlink()
+    h = (config.ASSETS / "template.html").read_text().replace("__DATA__", blob)
+    # fog of war (optional) -> navigation -> search -> learning layer
+    h = inject_learn.inject(inject_search.inject(inject_nav.inject(inject_fog.inject(h) if fog else h)))
+    # the page may only run its own scripts: names and snippets from the mapped repo can never execute, even if some
+    # path is rendered unescaped (no inline handlers, javascript: URLs or injected scripts)
+    return h.replace('<meta charset="utf-8">', f'<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="{csp(h)}">', 1)
+
+
+def csp(h):
+    """Content-Security-Policy for a city page: its inline scripts by hash, three.js from the CDN, nothing else runs."""
+    hashes = " ".join("'sha256-" + base64.b64encode(hashlib.sha256(m.group(1).encode()).digest()).decode() + "'"
+                      for m in re.finditer(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", h, re.S))
+    return (f"default-src 'none'; script-src {hashes} https://cdn.jsdelivr.net; style-src 'unsafe-inline'; "
+            "img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; "
+            "base-uri 'none'; form-action 'none'; object-src 'none'")
+
+
+def render(data, out_dir):
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "demo.html").write_text(page(data))
     for t in TEXTURES:
         shutil.copy(config.ASSETS / t, out_dir / t)
 

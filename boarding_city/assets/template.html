@@ -120,7 +120,7 @@ const heightOf=lines=>Math.max(0.6,0.34*Math.sqrt(lines));
 D.districts.forEach((d,i)=>{
   const n=d.files.length,cols=Math.ceil(Math.sqrt(n)),rows=Math.ceil(n/cols),size=sizes[i],c=i%COLS,r=Math.floor(i/COLS);
   const cx=-W/2+colW.slice(0,c).reduce((a,b)=>a+b,0)+GAP*c+colW[c]/2,cz=-HH/2+rowH.slice(0,r).reduce((a,b)=>a+b,0)+GAP*r+rowH[r]/2;
-  const tex=loader.load(`d${i%4}.jpg`);tex.colorSpace=THREE.SRGBColorSpace;
+  const tex=loader.load(`${D.texBase||""}d${i%4}.jpg`);tex.colorSpace=THREE.SRGBColorSpace;
   const plate=new THREE.Mesh(new THREE.BoxGeometry(size,0.3,size),[0,0,new THREE.MeshStandardMaterial({map:tex,roughness:.9}),0,0,0].map(m=>m||new THREE.MeshStandardMaterial({color:COLORS[i],roughness:.8})));
   plate.position.set(cx,0,cz);plate.userData={kind:"district",i};scene.add(plate);pickables.push(plate);
   d.center=new THREE.Vector3(cx,0,cz);d.size=size;
@@ -151,7 +151,7 @@ scene.fog=new THREE.Fog(0x0a0d16,EXT*1.1,EXT*3);controls.maxDistance=EXT*2.2;
 tags.forEach(t=>t.city=true);
 // ---- city layers: every layer comes from static analysis of the source (layers.py), never decoration ----
 const LY=D.layers,home=D.home||{},bOf=p=>buildings[home[p]||p],dOf=p=>fileDistrict[home[p]||p];
-const ON={roads:true,traffic:true,metro:true,ghost:true,buses:false,flights:false,power:false,cranes:false,night:false};
+const ON={roads:true,traffic:true,metro:true,ghost:true,buses:false,flights:false,power:false,cranes:false,night:false};Object.assign(ON,D.layersOn||{});
 const LG={};for(const k of ["roads","traffic","buses","flights","power","cranes","ghost"]){const g=new THREE.Group();g.visible=false;scene.add(g);LG[k]=g}
 const DETAIL=new THREE.Group(),LAND=new THREE.Group();scene.add(DETAIL,LAND);
 const dummy=new THREE.Object3D(),V=(x,y,z)=>new THREE.Vector3(x,y,z);
@@ -369,7 +369,7 @@ function ballAt(p,list){const m=new THREE.Mesh(new THREE.SphereGeometry(.28,16,1
 
 // ---- selection + panel ----
 let sel=null,arcs=[];
-const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 function highlight(mesh){if(sel)sel.material.emissive.setHex(0);sel=mesh;if(mesh)mesh.material.emissive.setHex(0x444444)}
 function clearArcs(){arcs.forEach(a=>scene.remove(a));arcs=[];metroTags.forEach(t=>{t.el.remove();tags.splice(tags.indexOf(t),1)});metroTags.length=0}
@@ -381,7 +381,7 @@ function showCity(){stopFlow();closeBuilding();highlight(null);clearArcs();if(mo
   panel.innerHTML=`<h2>${esc(D.repo)}</h2><div class="sub">${esc(D.app)}</div><ul class="list">${D.districts.map((d,i)=>`<li data-i="${i}"><b style="color:#${COLORS[i].toString(16)}">${esc(d.name)}</b><span>${esc(d.summary)} · ${(d.total??d.files.length).toLocaleString()} files</span></li>`).join("")}</ul>`;
   panel.querySelectorAll("li").forEach(li=>li.onclick=()=>showDistrict(+li.dataset.i))}
 function showDistrict(i){stopFlow();closeBuilding();highlight(null);clearArcs();const d=D.districts[i];if(mode==="3d")fly(d.center,d.size*1.35);crumb([["City",showCity],[d.name]]);
-  panel.innerHTML=`<h2>${esc(d.name)}</h2><div class="sub">${esc(d.summary)}</div><ul class="list">${d.files.map(p=>`<li data-p="${p}"><b>${esc(short(p))}</b><span>${esc(byPath[p].summary)} · ${byPath[p].lines} lines</span></li>`).join("")}</ul>`;
+  panel.innerHTML=`<h2>${esc(d.name)}</h2><div class="sub">${esc(d.summary)}</div><ul class="list">${d.files.map(p=>`<li data-p="${esc(p)}"><b>${esc(short(p))}</b><span>${esc(byPath[p].summary)} · ${byPath[p].lines} lines</span></li>`).join("")}</ul>`;
   panel.querySelectorAll("li").forEach(li=>li.onclick=()=>showFile(li.dataset.p))}
 function showFile(p,keepFlow){if(!keepFlow)stopFlow();const f=byPath[p],b=buildings[p],i=fileDistrict[p];highlight(null);clearArcs();
   if(mode!=="3d"){const bx=two.boxes.find(x=>x.path===p);if(bx&&mode==="2d")view2D(fitCenter(new THREE.Vector3(bx.x,0,(bx.z0+bx.z1)/2),camH()),camH(),600)}

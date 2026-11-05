@@ -1,0 +1,7 @@
+[project]
+name = "boarding-city"
+version = "0.2.0"
+description = "Explore a codebase as a 3D city and follow real user actions through the code."
+requires-python = ">=3.12"
+dependencies = ["requests>=2.32", "vercel>=0.12.2", "fastapi>=0.115"]
+

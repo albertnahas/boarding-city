@@ -11,7 +11,7 @@ MARK, END = "/* search */", "/* /search */"
 CSS_MARK, CSS_END = "/* search-css */", "/* /search-css */"
 
 CSS = """
-#bar:focus-within{z-index:12}
+#bar:focus-within,#bar:has(#findList:not([hidden])){z-index:12}
 #find{position:relative;display:flex}
 #findIn{width:230px;height:34px;box-sizing:border-box;padding:0 30px 0 32px;border-radius:8px;border:1px solid #ffffff26;background:#121726e6 no-repeat 10px 50%/14px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='6.5' cy='6.5' r='5' fill='none' stroke='%238b93a7' stroke-width='1.8'/%3E%3Cpath d='M10.5 10.5 15 15' stroke='%238b93a7' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");color:var(--ink);font:13px system-ui,sans-serif;backdrop-filter:blur(6px)}
 #findIn::placeholder{color:#8b93a7}
@@ -83,8 +83,7 @@ window.cityAPI.find=q=>{input.value=q;run();return hits.map(t=>({kind:t.kind,nam
 """
 
 
-def main(src, out):
-    h = open(src, encoding="utf-8").read()
+def inject(h):
     # re-running on an already injected page replaces the previous injection
     for a, b in ((MARK, END), (CSS_MARK, CSS_END)):
         while a in h:
@@ -93,8 +92,11 @@ def main(src, out):
     style_end = h.index("</style>")
     h = h[:style_end] + CSS_MARK + CSS.strip() + CSS_END + h[style_end:]
     end = h.index("</script>", h.index('<script type="module">'))
-    h = h[:end] + JS.strip() + "\n" + h[end:]
-    open(out, "w", encoding="utf-8").write(h)
+    return h[:end] + JS.strip() + "\n" + h[end:]
+
+
+def main(src, out):
+    open(out, "w", encoding="utf-8").write(inject(open(src, encoding="utf-8").read()))
     print(f"{out}: search added")
 
 

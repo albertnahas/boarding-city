@@ -4,5 +4,17 @@
   "installCommand": "",
   "buildCommand": "",
   "outputDirectory": "site",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 800,
+      "excludeFiles": "{site/**,docs/**,scripts/**,.cache/**,.venv/**}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    }
+  ]
 }

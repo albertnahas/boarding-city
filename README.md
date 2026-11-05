@@ -2,7 +2,11 @@
 
 Boarding City turns a JavaScript/TypeScript repository into a 3D city you can explore. Files are buildings, functions are floors, folders are districts. Then it walks you through real user actions, like "draw a rectangle" or "create a table", step by step through the code.
 
-![Boarding City: a walkthrough of Excalidraw's "Export as PNG"](docs/screenshot.png)
+**Try it:** https://boarding-city.vercel.app (paste any public GitHub repo, or open the Excalidraw and Supabase cities).
+
+![The guided tour of the Excalidraw city, at 4× speed](docs/demo.gif)
+
+[Watch the full 3-minute tour (MP4)](docs/demo.mp4)
 
 ## Features
 
@@ -27,6 +31,10 @@ Boarding City turns a JavaScript/TypeScript repository into a 3D city you can ex
 - **Ghost town.** Tumbleweeds roll past code that no user action reaches.
 - **Navigation.** On-screen zoom, pan and rotate controls, keyboard shortcuts (press `?`) and fullscreen.
 - **Find.** Jump to any district, file or function by name (press `/`).
+- **Guided tour.** On a first visit the onboarding plays itself: the city, each district, the files where user actions start, the files everything depends on, then two walkthroughs. Click anywhere to take over.
+- **What runs next? quiz.** Replay any walkthrough as a quiz: predict each next function (autocomplete, two tries, a hint), then read what that step does.
+- **Onboarding badges.** City map, Front doors, Main streets, Commuter and Next-stop predictor make you ready for your first change; more for busy files, shared state, unreached code and reading the source. Progress stays in your browser.
+- **GitHub links.** Every file and function opens on GitHub at the exact commit and line.
 
 ## Quickstart
 
@@ -49,6 +57,16 @@ The default models are `gpt-6-luna` for picking files, naming and headlines, and
 | supabase/supabase | 6,847 | $0.10 |
 
 Models are configurable in `.env`. Analysis, layers and verification use no AI at all.
+
+## Build a city in the browser
+
+On the hosted app, press **⌘K** (or **＋ Map a repo**), paste any public JS/TS GitHub repo, and press **Estimate**: you see the
+source size, the expected time and the cost first. **Build city** starts it in the background. The skyline appears
+within seconds, districts get their names one by one, and each walkthrough becomes playable as soon as it's traced
+and checked. Settings: number of walkthroughs (or your own, like "export as PNG"), models, reasoning effort, max
+files, and which features to include. Pin a commit with `owner/repo@<sha|branch|tag>` or a `github.com/owner/repo/tree/<ref>` URL (the CLI takes the same forms). Finished cities are cached per commit and settings, and every one gets a share
+link. Guards: public GitHub only, up to 1,500 source files, 3 builds an hour per visitor, and a daily AI budget.
+See [DESIGN.md](DESIGN.md) for how it runs on Vercel (background function with resumable stages, Blob storage).
 
 ## How it works
 

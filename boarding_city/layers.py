@@ -20,7 +20,7 @@ PLANTS = {
 }
 
 
-def build(src, S, G, dist, tests):
+def build(src, S, G, dist, tests, churn=None):
     by = {f["path"]: f for f in S}
     text = {p: open(os.path.join(src, p), encoding="utf-8", errors="replace").read() for p in by}
     out = {}
@@ -69,9 +69,11 @@ def build(src, S, G, dist, tests):
     pw = [[p, plant, r, w] for p, t in text.items() for plant, (rd, wr) in PLANTS.items()
           if (r := len(re.findall(rd, t))) | (w := len(re.findall(wr, t)))]
     out["power"] = {"plants": list(PLANTS), "lines": sorted(pw, key=lambda x: -(x[2] + x[3])), "edges": len(pw)}
-    git = lambda *a: subprocess.run(["git", "-C", str(src), *a], capture_output=True, text=True).stdout
-    churn = collections.Counter(x for x in git("log", "--since=90 days ago", "--format=", "--name-only").split() if x in by)
-    out["cranes"] = {"commits": int(git("rev-list", "--count", "--since=90 days ago", "HEAD").strip() or 0), "files": churn.most_common()}
+    if churn is None:  # a local clone: read the last 90 days from git; a tarball checkout (the web builder) passes its own or none
+        git = lambda *a: subprocess.run(["git", "-C", str(src), *a], capture_output=True, text=True).stdout
+        counts = collections.Counter(git("log", "--since=90 days ago", "--format=", "--name-only").split())
+        churn = {"commits": int(git("rev-list", "--count", "--since=90 days ago", "HEAD").strip() or 0), "files": counts}
+    out["cranes"] = {"commits": churn["commits"], "files": [[p, n] for p, n in collections.Counter({p: n for p, n in churn["files"].items() if p in by}).most_common()]}
     indeg = collections.Counter(b for a, o in G["edges"].items() for b, k in o.items() if k == "static")
     lines = {p: t.split("\n") for p, t in text.items()}
     out["functions"] = {f"{f['path']}::{x['name']}": [1 if lines[f["path"]][x["line"] - 1].lstrip().startswith("export") else 0,
@@ -79,3 +81,11 @@ def build(src, S, G, dist, tests):
     out["entries"] = collections.Counter(e.split("::")[0] for e in G["entries"]).most_common()
     out["parks"] = {str(d): n for d, n in collections.Counter(dist(p) for p in tests).items()}
     return out
+
+
+def empty():
+    """The layers of a city whose analysis hasn't run yet (or was switched off): every layer present, nothing on it."""
+    return {"roads": {"imports": 0, "highways": []}, "traffic": {"edges": 0, "pairs": []},
+            "buses": {"emitters": [], "routes": [], "dom": [], "edges": 0}, "flights": {"services": list(SERVICES), "routes": [], "edges": 0},
+            "power": {"plants": list(PLANTS), "lines": [], "edges": 0}, "cranes": {"commits": 0, "files": []},
+            "functions": {}, "entries": [], "parks": {}}
