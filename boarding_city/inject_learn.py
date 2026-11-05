@@ -17,8 +17,10 @@ a.gh{color:var(--acc);text-decoration:none;white-space:nowrap}a.gh:hover{text-de
 #panel .list li a.gh{font-size:11.5px;margin-left:6px}
 #pnlMin{position:absolute;top:8px;right:8px;width:26px;height:26px;padding:0;border-radius:7px;background:#1c2335;color:var(--mute);border:1px solid #ffffff1f;font-size:13px;line-height:1;cursor:pointer}
 #pnlMin:hover{color:var(--ink)}#panel #crumbs{padding-right:30px}
-#panel.min{width:auto;max-width:340px;padding:8px 12px}#panel.min #body{display:none}#panel.min #crumbs{margin:0}
-@media (max-width:700px){#panel.min{left:auto;max-height:none}}
+#panel.min{width:auto;padding:0;background:none;border:0;backdrop-filter:none;overflow:visible}#panel.min #body,#panel.min #crumbs{display:none}
+#panel.min #pnlMin{position:static;width:auto;height:34px;padding:0 12px;font:600 13px system-ui,sans-serif;color:var(--ink);background:#121726e6;border-color:#ffffff26;border-radius:8px}
+@media (min-width:701px){#app:has(#panel:not(.min)) #bar{right:364px}#app:has(#panel.min) #bar{right:130px}}
+@media (max-width:700px){#panel.min{left:auto;max-height:none}#app.quizzing #nav,#app.quizzing #fogHud{display:none}}
 #learnBtn{background:#1c2335;color:var(--ink);border:1px solid #ffffff1f;font-weight:600}
 #learnBtn b{color:var(--acc);font-variant-numeric:tabular-nums}
 #learnToast{position:absolute;left:50%;top:60px;transform:translate(-50%,-30px);opacity:0;z-index:14;background:#0f1424f5;border:1px solid #fbbf2488;color:#fde68a;padding:9px 16px;border-radius:999px;font:600 13.5px system-ui,sans-serif;transition:.4s;pointer-events:none}
@@ -44,6 +46,7 @@ a.gh{color:var(--acc);text-decoration:none;white-space:nowrap}a.gh:hover{text-de
 #plQuiz{background:#fbbf24;color:#1a1300;border:0;font-weight:700}
 #player.quiz #plPlay,#player.quiz #plNext,#player.quiz #plLast,#player.quiz #plLoop,#player.quiz #plSpeed,#player.quiz #plSteps,#player.quiz #plQuiz{display:none}
 #player.quiz~#plList{display:none}
+#qzExit{display:none}#player.quiz #qzExit{display:inline-block}
 #player.quiz #plTrack b.ahead{pointer-events:none;opacity:.25}
 #qz{width:min(560px,100%);position:relative;display:grid;gap:6px}#qz[hidden]{display:none}
 #qz .q{font-size:13px;text-align:center}#qz .q code{font:600 12.5px ui-monospace,Menlo,monospace;color:var(--flow)}#qz .q em{color:var(--mute);font-style:normal;font-size:12px}
@@ -60,7 +63,8 @@ a.gh{color:var(--acc);text-decoration:none;white-space:nowrap}a.gh:hover{text-de
 #qzFb.ok{background:#05966933;color:#6ee7b7;border:1px solid #34d39966}
 #qzFb.half{background:#d9770633;color:#fcd34d;border:1px solid #fbbf2466}
 #qzFb.no{background:#e11d4833;color:#fda4af;border:1px solid #f43f5e66;animation:qzShake .35s}
-#qzFb code{font:600 12.5px ui-monospace,Menlo,monospace}
+#qzFb code{font:600 12.5px ui-monospace,Menlo,monospace}#qzFb .why{margin-top:5px;color:var(--ink);font-size:12.5px;line-height:1.4;text-align:left}
+#app.quizzing .ftag{color:#cbd5e1!important;border-color:#ffffff14!important;font-weight:500!important}.ftag.qhide{visibility:hidden!important}
 #qzFb button{margin-left:8px;padding:3px 10px;font-size:12.5px}
 #qz .score{font-size:12px;color:var(--mute);text-align:center;font-variant-numeric:tabular-nums}
 #player.qok{box-shadow:0 0 0 2px #34d399,0 0 24px #34d39955}#player.qno{box-shadow:0 0 0 2px #f43f5e,0 0 24px #f43f5e55}
@@ -91,7 +95,7 @@ function linkFn(p,n){const sub=panel.querySelector("h2+.sub"),fn=byPath[p]?.func
 // ---- collapsible side panel: tucks away after the overview; opening something new brings it back ----
 const pnl=document.getElementById("panel"),minB=document.createElement("button");minB.id="pnlMin";minB.type="button";pnl.prepend(minB);
 let mini=false;try{mini=localStorage.getItem("bc-panel-min")==="1"}catch{}
-function setMin(v){mini=v;pnl.classList.toggle("min",v);minB.textContent=v?"⟨":"⟩";minB.title=v?"Show the side panel":"Hide the side panel";minB.setAttribute("aria-label",minB.title);
+function setMin(v){mini=v;pnl.classList.toggle("min",v);minB.textContent=v?"⟨ Panel":"⟩";minB.title=v?"Show the side panel":"Hide the side panel";minB.setAttribute("aria-label",minB.title);
   minB.setAttribute("aria-expanded",String(!v));try{localStorage.setItem("bc-panel-min",v?"1":"0")}catch{}}
 minB.onclick=()=>setMin(!mini);setMin(mini);
 const expand=()=>{if(mini&&!flow.on)setMin(false)};
@@ -144,10 +148,10 @@ function showOnboarding(){stopFlow();closeBuilding();highlight(null);clearArcs()
     <div class="sub">${won.size} of ${BADGES.length} badges in ${esc(D.repo)}. ${ready()?"🎓 <b>Ready for your first change.</b> You know where features start, what everything depends on and how the main flows run.":"Earn the 5 core badges to be ready for your first change."}</div></div>`+
     BADGES.map(b=>{const r=prog(b),w=won.has(b.id);
       return `<details class="ob-badge${w?" won":""}" data-id="${b.id}"${open.has(b.id)?" open":""}><summary><span class="ic" aria-hidden="true">${b.ic}</span><span class="t">${esc(b.t)}${CORE.includes(b.id)?' <span class="core">core</span>':""}</span><span class="n">${r.n}/${r.of}${w?" ✓":""}</span><span class="why">${esc(b.why)}</span></summary>
-        <div class="ob-bar"><u style="width:${100*r.n/r.of}%"></u></div>${r.it&&r.it.length?`<ul class="ob-items">${r.it.map((x,k)=>`<li class="${x.ok?"ok":""}" data-k="${k}"><i>${x.ok?"✓":"○"}</i><span>${esc(x.label)}</span><small>${esc(x.sub||"")}</small></li>`).join("")}</ul>`:""}</details>`}).join("")+
+        <div class="ob-bar"><u style="width:${100*r.n/r.of}%"></u></div>${r.it&&r.it.length?`<ul class="ob-items">${r.it.map((x,k)=>`<li class="${x.ok?"ok":""}" data-k="${k}" tabindex="0" role="button"><i>${x.ok?"✓":"○"}</i><span>${esc(x.label)}</span><small>${esc(x.sub||"")}</small></li>`).join("")}</ul>`:""}</details>`}).join("")+
     `<button class="ob-reset" type="button">Reset my onboarding progress</button>`;
-  panel.querySelectorAll(".ob-badge").forEach(d=>{const b=BADGES.find(x=>x.id===d.dataset.id);d.querySelectorAll(".ob-items li").forEach(li=>li.onclick=()=>{viewing=false;prog(b).it[+li.dataset.k].go()})});
-  panel.querySelector(".ob-reset").onclick=()=>{if(!confirmReset())return;files.clear();fns.clear();flowsSeen.clear();ghosts.clear();won.clear();Object.assign(L,{quiz:{},gh:0,diagram:false});save();renderBtn();showOnboarding()}}
+  panel.querySelectorAll(".ob-badge").forEach(d=>{const b=BADGES.find(x=>x.id===d.dataset.id);d.querySelectorAll(".ob-items li").forEach(li=>{li.onclick=()=>{viewing=false;prog(b).it[+li.dataset.k].go()};li.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();li.click()}}})});
+  panel.querySelector(".ob-reset").onclick=()=>{if(!confirmReset())return;files.clear();fns.clear();flowsSeen.clear();ghosts.clear();won.clear();Object.assign(L,{quiz:{},gh:0,diagram:false});delete L.run;save();renderBtn();showOnboarding()}}
 let armed=0;function confirmReset(){const b=panel.querySelector(".ob-reset");if(Date.now()-armed<4000)return true;armed=Date.now();b.textContent="Click again to erase all progress";return false}
 function renderBtn(){btn.innerHTML=`🎓 Onboarding <b>${overall()}%</b>`}
 btn.onclick=showOnboarding;
@@ -164,84 +168,98 @@ const _isolate=isolate;isolate=function(fi,instant){if(Q.on)return;L.diagram=tru
 const _showStep=showStep;showStep=function(k){const r=_showStep(k);if(P.fi!==null&&P.k===D.flows[P.fi].steps.length-1&&!Q.on&&!flowsSeen.has(P.fi)){flowsSeen.add(P.fi);check()}return r};
 
 // ---- the quiz: at every step, predict the function that runs next ----
-const Q={on:false,fi:null,answered:new Set(),pts:0,right:0,tries:0,hint:false};
+// two tries per step: right first time 2 points, right on the second try or after a hint 1, revealed 0.
+// Progress is kept per flow, so leaving the quiz and coming back resumes it.
+const Q={on:false,fi:null,answered:new Map(),pts:0,right:0,hint:false,miss:0,pick:null};
 const ALL=[...new Map(D.files.flatMap(f=>f.cluster?[]:f.functions.map(fn=>[f.path+"::"+fn.name,{n:fn.name,p:f.path}]))
   .concat(D.flows.flatMap(F=>F.steps.map(s=>[s.path+"::"+s.function,{n:s.function,p:s.path}])))).values()];
 ALL.forEach(x=>x.l=x.n.toLowerCase());
 const pl=document.getElementById("player"),row=document.getElementById("plRow");
-const qBtn=document.createElement("button");qBtn.id="plQuiz";qBtn.type="button";qBtn.textContent="🎯 Quiz me";qBtn.title="Restart this flow as a quiz: predict each next function";
+const qBtn=document.createElement("button");qBtn.id="plQuiz";qBtn.type="button";qBtn.textContent="🎯 Quiz me";qBtn.title="Turn this flow into a quiz: predict each next function";
 row.insertBefore(qBtn,document.getElementById("plClose"));qBtn.onclick=()=>startQuiz(P.fi);
 const box=document.createElement("div");box.id="qz";box.hidden=true;
 box.innerHTML=`<div class="q" id="qzQ"></div><div class="row"><input id="qzIn" type="text" autocomplete="off" spellcheck="false" placeholder="Type a function name…" role="combobox" aria-expanded="false" aria-controls="qzList" aria-autocomplete="list" aria-labelledby="qzQ">
-  <button id="qzSubmit" type="button">Submit</button><button id="qzHint" type="button" title="Show which file it lives in (the answer then scores 1 point)">Hint</button><button id="qzSkip" type="button" title="Reveal the answer (0 points)">Reveal</button><button id="qzExit" type="button">Exit quiz</button></div>
+  <button id="qzSubmit" type="button">Submit</button><button id="qzHint" type="button" title="Show which file it lives in (a right answer then scores 1 point)">Hint</button><button id="qzSkip" type="button" title="Show the answer (0 points)">Reveal</button></div>
   <ul id="qzList" role="listbox" hidden></ul><div id="qzFb" role="status" hidden></div><div class="score" id="qzScore"></div>`;
 pl.insertBefore(box,document.getElementById("plTrack"));
-const $q=id=>document.getElementById(id),qin=$q("qzIn"),qlist=$q("qzList"),qfb=$q("qzFb");
-const target=()=>D.flows[Q.fi].steps[P.k+1];
+const exitB=document.createElement("button");exitB.id="qzExit";exitB.type="button";exitB.textContent="Exit quiz";exitB.title="Leave the quiz; your progress is kept";row.insertBefore(exitB,document.getElementById("plClose"));
+const $q=id=>document.getElementById(id),qin=$q("qzIn"),qlist=$q("qzList"),qfb=$q("qzFb"),qrow=box.querySelector(".row");
+const target=()=>D.flows[Q.fi].steps[P.k+1],open_=()=>target()&&!Q.answered.has(P.k+1);
+const keep=()=>{L.run={fi:Q.fi,answered:[...Q.answered],pts:Q.pts,right:Q.right};save()};
+// the floors of the open building are labelled; hide the ones that would give away an unanswered step
+function hideAhead(){if(!Q.on)return;const F=D.flows[Q.fi],ahead=new Set(F.steps.map((s,j)=>j>P.k&&!Q.answered.has(j)&&s.path===open.path?s.function:null).filter(Boolean));
+  open.tags.forEach(t=>{if(t.fl)t.el.classList.toggle("qhide",ahead.has(t.fl.userData.fn.name))})}
 function renderScore(){const N=D.flows[Q.fi].steps.length;
   [...$("plTrack").children].forEach((b,k)=>{b.classList.toggle("ahead",k>P.k&&!Q.answered.has(k));b.removeAttribute("title")});
-  $q("qzScore").textContent=`Score ${Q.pts}/${2*Q.tries} · ${Q.right} of ${Q.tries} right · ${N-1-Q.answered.size} to go`}
-function renderQ(){const F=D.flows[Q.fi],N=F.steps.length,s=F.steps[P.k],t=target(),rowEl=box.querySelector(".row");renderScore();
-  if(!t||Q.answered.has(P.k+1)){rowEl.hidden=true;$q("qzQ").innerHTML=t?`You answered step ${P.k+2} already: press <b>N</b> or click its number on the track to go on.`:"";return finishIfDone()}
-  rowEl.hidden=false;qin.disabled=false;
-  const ind=t.link.startsWith("indirect");
-  $q("qzQ").innerHTML=`Step ${P.k+2}/${N}: after <code>${esc(s.function)}()</code>, what runs next? <em>${ind?"(reached via an event, callback or state change)":"(a direct call)"}</em>${Q.hint?`<br><em>Hint: it lives in <b>${esc(short(t.path))}</b>, ${esc(D.districts[fileDistrict[H(t.path)]]?.name||"")}</em>`:""}`}
+  $q("qzScore").textContent=`Score ${Q.pts}/${2*Q.answered.size} · ${Q.right} right first try · ${N-1-Q.answered.size} to go`}
+function renderQ(){const F=D.flows[Q.fi],N=F.steps.length,s=F.steps[P.k],t=target();renderScore();hideAhead();
+  if(!open_()){qrow.hidden=true;$q("qzQ").innerHTML=t?`You answered step ${P.k+2} already: press <b>N</b> or click its number on the track to go on.`:"";return finishIfDone()}
+  qrow.hidden=false;qin.disabled=false;
+  $q("qzQ").innerHTML=`Step ${P.k+2}/${N}: after <code>${esc(s.function)}()</code>, what runs next? <em>${t.link.startsWith("indirect")?"(reached via an event, callback or state change)":"(a direct call)"}</em>${Q.hint?`<br><em>Hint: it lives in <b>${esc(short(t.path))}</b>, ${esc(D.districts[fileDistrict[H(t.path)]]?.name||"")}</em>`:""}`}
 function finishIfDone(){const F=D.flows[Q.fi];if(Q.answered.size<F.steps.length-1)return;
-  const max=qMax(Q.fi),best=Math.max(qBest(Q.fi),Q.pts);L.quiz[Q.fi]={best,last:Q.pts};flowsSeen.add(Q.fi);check();
-  fb(Q.pts>=0.8*max?"ok":Q.pts>=0.5*max?"half":"no",`Quiz done: <b>${Q.pts}/${max}</b> (${Q.right} of ${F.steps.length-1} right first time). Best ${best}/${max}.`,
+  const max=qMax(Q.fi),best=Math.max(qBest(Q.fi),Q.pts);L.quiz[Q.fi]={best,last:Q.pts};delete L.run;flowsSeen.add(Q.fi);check();
+  fb(Q.pts>=0.8*max?"ok":Q.pts>=0.5*max?"half":"no",`Quiz done: <b>${Q.pts}/${max}</b>, ${Q.right} of ${F.steps.length-1} right first try. Best ${best}/${max}.`,
     `<button type="button" data-a="retry">Retry</button><button type="button" data-a="gallery">Other flows</button>`)}
 function fb(cls,html,act=""){qfb.className=cls;qfb.innerHTML=html+act;qfb.hidden=false;pl.classList.remove("qok","qno");if(cls!=="half")void pl.offsetWidth,pl.classList.add(cls==="ok"?"qok":"qno");setTimeout(()=>pl.classList.remove("qok","qno"),900)}
-qfb.addEventListener("click",e=>{const a=e.target.closest("button")?.dataset.a;if(a==="next")advance();else if(a==="retry")startQuiz(Q.fi);else if(a==="gallery"){stopFlow();showGallery()}});
+qfb.addEventListener("click",e=>{const a=e.target.closest("button")?.dataset.a;if(a==="next")advance();else if(a==="retry")startQuiz(Q.fi,true);else if(a==="gallery"){stopFlow();showGallery()}});
 let advancing=false;
-function advance(){qfb.hidden=true;Q.hint=false;advancing=true;const N=D.flows[Q.fi].steps.length;let j=1;while(j<N&&Q.answered.has(j))j++;const r=_gotoStep(j-1);advancing=false;Promise.resolve(r).then(()=>{renderQ();if(!box.querySelector(".row").hidden)qin.focus()})}
-function grade(text){const t=target();if(!t||Q.answered.has(P.k+1))return;const v=text.trim().replace(/\(\)$/,"").toLowerCase();if(!v)return qin.focus();
-  const name=v.split(/\s+·\s+|\s+/)[0],pick=hits[sel]&&!qlist.hidden?hits[sel]:null;
-  const sameName=(pick?pick.l:name)===t.function.toLowerCase(),samePath=pick?H(pick.p)===H(t.path):true;
-  Q.answered.add(P.k+1);Q.tries++;qin.value="";closeAC();qin.disabled=true;
-  const where=`<code>${esc(t.function)}()</code> in ${esc(short(t.path))}`;
-  if(sameName&&samePath){const p=Q.hint?1:2;Q.pts+=p;Q.right++;fb("ok",`✓ Right: ${where}. +${p}`);setTimeout(advance,1100)}
-  else if(sameName){Q.pts+=1;fb("half",`Right name, but this one is ${where}. +1`,`<button type="button" data-a="next">Continue ▸</button>`)}
-  else fb("no",`✗ Not quite. It was ${where}.`,`<button type="button" data-a="next">Continue ▸</button>`);
+function advance(){qfb.hidden=true;Q.hint=false;Q.miss=0;advancing=true;const N=D.flows[Q.fi].steps.length;let j=1;while(j<N&&Q.answered.has(j))j++;const r=_gotoStep(j-1);advancing=false;
+  Promise.resolve(r).then(()=>{renderQ();if(!qrow.hidden)qin.focus()})}
+// settle the current step: score it, then teach it (the traced explanation of what that step does)
+function settle(pts,head){const t=target();Q.answered.set(P.k+1,pts);Q.pts+=pts;if(pts===2)Q.right++;keep();qin.value="";closeAC();qin.disabled=true;
+  fb(pts===2?"ok":pts===1?"half":"no",`${head} <code>${esc(t.function)}()</code> in ${esc(short(t.path))}${pts?` · +${pts}`:""}<div class="why">${esc(t.narration)}</div>`,`<button type="button" data-a="next">Continue ▸</button>`);
   renderScore();setTimeout(()=>qfb.querySelector("button")?.focus(),0)}
-// autocomplete over every function in the city
+function grade(){if(!open_())return;const t=target(),v=qin.value.trim().replace(/\(\)$/,"");if(!v)return qin.focus();
+  const pick=Q.pick&&Q.pick.n===v?Q.pick:null,sameName=v.toLowerCase()===t.function.toLowerCase(),samePath=!pick||H(pick.p)===H(t.path);
+  if(sameName&&samePath)return settle(Q.miss||Q.hint?1:2,"✓ Right:");
+  Q.miss++;const said=`<code>${esc(v)}()</code>${pick?` in ${esc(short(pick.p))}`:""}`;
+  if(Q.miss>=2)return settle(0,`✗ Not ${said}. It was`);
+  qin.value="";Q.pick=null;closeAC();
+  fb("no",sameName?`Right name, but ${said} is a different function with that name. One more try.`:`✗ Not ${said}. One more try, or use Hint.`);qin.focus()}
+// autocomplete over every function in the city: picking a suggestion fills the box, Submit grades it
 let hits=[],sel=-1;
 function closeAC(){qlist.hidden=true;qin.setAttribute("aria-expanded","false");sel=-1}
-function ac(){const q=qin.value.trim().replace(/\(\)$/,"").toLowerCase();if(!q){hits=[];return closeAC()}
+function ac(){Q.pick=null;const q=qin.value.trim().replace(/\(\)$/,"").toLowerCase();if(!q){hits=[];return closeAC()}
   hits=ALL.map(x=>[x.l===q?3:x.l.startsWith(q)?2:x.l.includes(q)?1:0,x]).filter(([s])=>s).sort((a,b)=>b[0]-a[0]||a[1].n.length-b[1].n.length).slice(0,8).map(([,x])=>x);
-  sel=hits.length?0:-1;qlist.hidden=!hits.length;qin.setAttribute("aria-expanded",String(!!hits.length));
-  qlist.innerHTML=hits.map((x,k)=>`<li id="qz${k}" role="option" aria-selected="${k===sel}" data-k="${k}">${esc(x.n)}()<span>${esc(short(x.p))}</span></li>`).join("");
-  qin.setAttribute("aria-activedescendant",sel>=0?"qz"+sel:"")}
-function mv(d){if(!hits.length)return;sel=(sel+d+hits.length)%hits.length;[...qlist.children].forEach((li,k)=>li.setAttribute("aria-selected",String(k===sel)));
+  sel=-1;qlist.hidden=!hits.length;qin.setAttribute("aria-expanded",String(!!hits.length));
+  qlist.innerHTML=hits.map((x,k)=>`<li id="qz${k}" role="option" aria-selected="false" data-k="${k}">${esc(x.n)}()<span>${esc(short(x.p))}</span></li>`).join("");
+  qin.setAttribute("aria-activedescendant","")}
+function mv(d){if(!hits.length)return;sel=sel<0?(d>0?0:hits.length-1):(sel+d+hits.length)%hits.length;[...qlist.children].forEach((li,k)=>li.setAttribute("aria-selected",String(k===sel)));
   qin.setAttribute("aria-activedescendant","qz"+sel);qlist.children[sel].scrollIntoView({block:"nearest"})}
+function choose(k){Q.pick=hits[k];qin.value=hits[k].n;closeAC();qin.focus()}
 qin.addEventListener("input",ac);
-qin.addEventListener("keydown",e=>{if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();mv(e.key==="ArrowDown"?1:-1)}
-  else if(e.key==="Enter"){e.preventDefault();grade(sel>=0&&!qlist.hidden?hits[sel].n:qin.value)}
+qin.addEventListener("keydown",e=>{if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();if(qlist.hidden&&qin.value)ac();mv(e.key==="ArrowDown"?1:-1)}
+  else if(e.key==="Enter"){e.preventDefault();if(sel>=0&&!qlist.hidden)choose(sel);else grade()}
   else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();qlist.hidden?qin.blur():closeAC()}});
-qlist.addEventListener("pointerdown",e=>{const li=e.target.closest("li");if(!li)return;e.preventDefault();sel=+li.dataset.k;grade(hits[sel].n)});
-qin.addEventListener("blur",()=>setTimeout(closeAC,120));
-$q("qzSubmit").onclick=()=>grade(sel>=0&&!qlist.hidden?hits[sel].n:qin.value);
-$q("qzHint").onclick=()=>{Q.hint=true;renderQ();qin.focus()};
-$q("qzSkip").onclick=()=>{const t=target();if(!t||Q.answered.has(P.k+1))return;Q.answered.add(P.k+1);Q.tries++;closeAC();qin.disabled=true;
-  fb("no",`It was <code>${esc(t.function)}()</code> in ${esc(short(t.path))}.`,`<button type="button" data-a="next">Continue ▸</button>`);renderScore();setTimeout(()=>qfb.querySelector("button")?.focus(),0)};
+qlist.addEventListener("pointerdown",e=>{const li=e.target.closest("li");if(!li)return;e.preventDefault();choose(+li.dataset.k)});
+qin.addEventListener("blur",()=>setTimeout(()=>{if(document.activeElement!==qin)closeAC()},120));
+$q("qzSubmit").onclick=grade;
+$q("qzHint").onclick=()=>{if(!open_())return;Q.hint=true;renderQ();qin.focus()};
+$q("qzSkip").onclick=()=>{if(open_())settle(0,"It was")};
 $q("qzExit").onclick=()=>endQuiz();
-async function startQuiz(fi){viewing=false;if(iso.fi!==null)await unisolate();if(mode==="2d")await to3D();
-  if(P.fi!==fi)openPlayer(fi);pause();Object.assign(Q,{on:true,fi,answered:new Set(),pts:0,right:0,tries:0,hint:false});
-  pl.classList.add("quiz");box.hidden=false;qfb.hidden=true;modeBtn.disabled=true;await _gotoStep(0);renderQ();qin.focus()}
-function endQuiz(){if(!Q.on)return;Q.on=false;pl.classList.remove("quiz","qok","qno");box.hidden=true;modeBtn.disabled=false;closeAC();
+const appEl=document.getElementById("app");
+async function startQuiz(fi,fresh){viewing=false;if(iso.fi!==null)await unisolate();if(mode==="2d")await to3D();
+  if(P.fi!==fi)openPlayer(fi);pause();const run=!fresh&&L.run?.fi===fi?L.run:null;
+  Object.assign(Q,{on:true,fi,answered:new Map(run?.answered||[]),pts:run?.pts||0,right:run?.right||0,hint:false,miss:0,pick:null});keep();
+  pl.classList.add("quiz");appEl.classList.add("quizzing");box.hidden=false;qfb.hidden=true;modeBtn.disabled=true;
+  let j=1;const N=D.flows[fi].steps.length;while(j<N&&Q.answered.has(j))j++;await _gotoStep(j-1);renderQ();qin.focus()}
+function endQuiz(){if(!Q.on)return;Q.on=false;pl.classList.remove("quiz","qok","qno");appEl.classList.remove("quizzing");box.hidden=true;modeBtn.disabled=false;closeAC();
+  open.tags.forEach(t=>t.el.classList.remove("qhide"));
   const F=D.flows[Q.fi];[...$("plTrack").children].forEach((b,k)=>{b.classList.remove("ahead");b.title=`${k+1}. ${F.steps[k].function}()`})}
 // while quizzing: no autoplay, and no jumping ahead of what has been answered
-const _gotoStep=gotoStep;gotoStep=function(k){if(Q.on&&!advancing){qfb.hidden=true;const N=D.flows[Q.fi].steps.length;k=Math.max(0,Math.min(N-1,k));
+const _gotoStep=gotoStep;gotoStep=function(k){if(Q.on&&!advancing){qfb.hidden=true;Q.miss=0;Q.hint=false;const N=D.flows[Q.fi].steps.length;k=Math.max(0,Math.min(N-1,k));
     for(let j=P.k+1;j<=k;j++)if(!Q.answered.has(j)){const r=_gotoStep(j-1);Promise.resolve(r).then(()=>{renderQ();qin.focus()});return r}}
   const r=_gotoStep(k);if(Q.on)Promise.resolve(r).then(renderQ);return r};
 const _play=play;play=function(){if(Q.on){qin.focus();return}return _play()};
 const _stopFlow=stopFlow;stopFlow=function(){if(Q.on)endQuiz();return _stopFlow()};
 // a quiz button on every flow in the gallery
+const quizLabel=fi=>L.run?.fi===fi?`🎯 Resume quiz · ${L.run.answered.length}/${D.flows[fi].steps.length-1}`:qBest(fi)<0?"🎯 Quiz":`🎯 Quiz · best ${qBest(fi)}/${qMax(fi)}`;
 const _showGallery=showGallery;showGallery=function(){viewing=false;setMin(false);const r=_showGallery();
   panel.querySelectorAll("li.flowitem").forEach(li=>{const fi=+li.dataset.fi,b=document.createElement("button");b.type="button";b.className="qzGo";
-    b.textContent=qBest(fi)<0?"🎯 Quiz":`🎯 Quiz · best ${qBest(fi)}/${qMax(fi)}`;b.onclick=e=>{e.stopPropagation();startQuiz(fi)};li.querySelector(".isoLink")?.before(b)});return r};
+    b.textContent=quizLabel(fi);b.onclick=e=>{e.stopPropagation();startQuiz(fi)};li.querySelector(".isoLink")?.before(b)});return r};
 document.getElementById("galleryBtn").onclick=showGallery;  // the button was bound to the unwrapped function
 window.cityAPI=Object.assign(window.cityAPI||{},{learn:{state:()=>({pct:overall(),won:[...won],badges:BADGES.map(b=>({id:b.id,...prog(b),it:undefined})),quiz:{...Q,answered:[...Q.answered]},min:mini}),
-  show:showOnboarding,quiz:startQuiz,answer:grade}});
+  show:showOnboarding,quiz:startQuiz}});
 }
 /* /learn */
 """

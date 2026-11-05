@@ -518,7 +518,8 @@ function placePlayer(){const ar=app.getBoundingClientRect(),band=ar.bottom-140;l
       // too little room under the player: the list opens as a bottom sheet over the info panel (it carries the same narration)
       if(lim-ar.top-y<140)put(plList,{top:"auto",bottom:"8px",left:"8px",right:"8px",maxHeight:"42%"});
       else{put(plList,{top:y+"px",left:"8px",right:"8px"});plList.style.maxHeight=(lim-plList.getBoundingClientRect().top-6)+"px"}}}}
-  else{dock.forEach(el=>Object.assign(el.style,{top:"",bottom:"",left:"",right:""}));plList.style.maxHeight="";
+  else{const below=$("bar").getBoundingClientRect().bottom-ar.top+8;  // the top bar wraps when space is short: add-on panels sit under it
+    dock.forEach((el,i)=>Object.assign(el.style,{top:i?below+"px":"",bottom:"",left:"",right:""}));plList.style.maxHeight="";
     const lowest=Math.max(ar.top,...dock.slice(1).filter(el=>!el.hidden&&el.offsetParent).map(el=>el.getBoundingClientRect().bottom));dock[0].style.maxHeight=lowest>ar.top?(ar.bottom-lowest-24)+"px":"";
     if(plBar.hidden)return;
     Object.assign(s,{top:"auto",bottom:"12px",left:(L-ar.left)+"px",right:(ar.right-R)+"px"});Object.assign(ls,{top:"auto",bottom:(plBar.offsetHeight+20)+"px",left:(L-ar.left)+"px",right:(ar.right-R)+"px"})}}

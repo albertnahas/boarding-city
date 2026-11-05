@@ -28,6 +28,7 @@ CSS = """
 #findList .sb{grid-column:2;color:#8b93a7;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #findList .none{display:block;color:#8b93a7;cursor:default}
 #panel .list li.found{background:#5eead41f;box-shadow:inset 2px 0 var(--acc)}
+@media (max-width:700px),(pointer:coarse){#find .k{display:none}}
 @media (max-width:700px){#findIn{width:min(230px,calc(100vw - 24px))}#find{position:static}#findList{left:0;right:0;width:auto}}
 """
 
@@ -39,9 +40,11 @@ box.innerHTML=`<input id="findIn" type="search" placeholder="Find a file or func
 document.getElementById("bar").appendChild(box);
 const input=box.querySelector("input"),list=box.querySelector("ul"),hex=i=>"#"+COLORS[i%COLORS.length].toString(16).padStart(6,"0");
 // the index: every district, file (small files resolve to their block) and function, searchable by name and by path
+// long paths keep their first folder and their last three parts: the parts that tell files apart
+const clipPath=p=>{const a=p.split("/");return a.length>5?[a[0],"…",...a.slice(-3)].join("/"):p};
 const ITEMS=[...D.districts.map((d,i)=>({kind:"district",name:d.name,sub:`District · ${d.files.length} buildings`,i,go:()=>showDistrict(i)})),
-  ...D.files.flatMap(f=>f.cluster?f.members.map(m=>({kind:"file",name:short(m.path),path:m.path,sub:`${m.path} · in ${short(f.path)}`,i:fileDistrict[f.path],go:()=>{showFile(f.path);const b=short(m.path),li=[...panel.querySelectorAll(".list li")].find(li=>li.querySelector("b")?.textContent===b);if(li){li.classList.add("found");li.scrollIntoView({block:"nearest"})}}}))
-    :[{kind:"file",name:short(f.path),path:f.path,sub:`${f.path} · ${f.lines} lines`,i:fileDistrict[f.path],go:()=>showFile(f.path)},
+  ...D.files.flatMap(f=>f.cluster?f.members.map(m=>({kind:"file",name:short(m.path),path:m.path,sub:`${clipPath(m.path)} · in ${short(f.path)}`,i:fileDistrict[f.path],go:()=>{showFile(f.path);const b=short(m.path),li=[...panel.querySelectorAll(".list li")].find(li=>li.querySelector("b")?.textContent===b);if(li){li.classList.add("found");li.scrollIntoView({block:"nearest"})}}}))
+    :[{kind:"file",name:short(f.path),path:f.path,sub:`${clipPath(f.path)} · ${f.lines} lines`,i:fileDistrict[f.path],go:()=>showFile(f.path)},
       ...f.functions.map(fn=>({kind:"fn",name:fn.name,path:f.path,sub:`${short(f.path)}:${fn.line}`,i:fileDistrict[f.path],go:()=>showFn(f.path,fn.name)}))])];
 ITEMS.forEach(t=>{t.n=t.name.toLowerCase();t.s=t.kind==="file"?t.n.replace(/\.[^.]+$/,""):t.n;t.p=(t.path||"").toLowerCase()});
 const RANK={district:0,file:1,fn:2};
