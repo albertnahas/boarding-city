@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Code City</title>
+<style>
+:root{--bg:#0a0d16;--panel:#121726ee;--ink:#e8ecf5;--mute:#8b93a7;--acc:#5eead4;--flow:#fbbf24}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,sans-serif;overflow:hidden}
+#app{position:relative;width:100%;height:100%}
+canvas{display:block;width:100%;height:100%}
+#panel{z-index:6;position:absolute;top:12px;right:12px;width:340px;max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid #ffffff14;border-radius:12px;padding:14px 16px;backdrop-filter:blur(6px)}
+#crumbs{font-size:12px;color:var(--mute);margin-bottom:6px}#crumbs a{color:var(--acc);cursor:pointer;text-decoration:none}
+h2{margin:0 0 6px;font-size:18px}.sub{color:var(--mute);font-size:12px}
+.list{margin:10px 0 0;padding:0;list-style:none}.list li{padding:6px 8px;border-radius:6px;cursor:pointer}.list li:hover{background:#ffffff0d}
+.list b{font-weight:600}.list span{display:block;color:var(--mute);font-size:12px}
+pre{background:#05070d;border-radius:8px;padding:8px;font-size:11.5px;overflow:auto;color:#cbd5e1;margin:10px 0 0}
+#bar{position:absolute;left:12px;top:12px;display:flex;gap:8px;flex-wrap:wrap;z-index:6}
+button{background:#1c2335;color:var(--ink);border:1px solid #ffffff1f;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+button.primary{background:var(--flow);color:#1a1300;border:none;font-weight:600}
+#step{color:var(--flow);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.tag{position:absolute;pointer-events:none;font-size:12px;font-weight:600;padding:2px 7px;border-radius:5px;background:#000a;white-space:nowrap;transform:translate(-50%,-100%)}
+.ftag{transform:translate(0,-50%);font-weight:500;font-size:11.5px;background:#0a0d16cc;border:1px solid #ffffff14}.ftag.on{color:var(--flow)!important;border-color:#fbbf2466;font-weight:600}
+.hoptag{transform:translate(-50%,-50%);font-size:10.5px;font-weight:500;background:#1a1300dd;border:1px dashed #fbbf24aa}
+#backBtn[hidden]{display:none}
+#paper{position:absolute;inset:0;z-index:14;background:#05070dcc;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}#paper[hidden]{display:none}
+#paper .sheet{position:relative;width:min(920px,100%);max-height:100%;overflow:auto;background:#f3eee1;color:#1f1b16;border-radius:4px;padding:22px 26px;box-shadow:0 20px 60px #000c;font:15px/1.45 Georgia,"Times New Roman",serif}
+#paper header{text-align:center;border-bottom:3px double #1f1b16;padding-bottom:8px;margin-bottom:14px}
+#paper h1{margin:4px 0 2px;font:900 clamp(30px,6vw,58px)/1 "Old English Text MT","UnifrakturMaguntia","Times New Roman",serif;letter-spacing:.5px}
+#paper .ears{padding-right:30px;display:flex;justify-content:space-between;font:11px/1.2 Georgia,serif;text-transform:uppercase;letter-spacing:.12em;color:#5c544a}
+#paper .dateline{border-top:1px solid #1f1b16;border-bottom:1px solid #1f1b16;padding:3px 0;font:12px Georgia,serif;letter-spacing:.08em;text-transform:uppercase}
+#paperBody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 26px}
+#paperBody section{border-top:1px solid #1f1b1640;padding-top:10px;min-width:0}#paperBody section.lead{grid-column:1/-1;border-top:0;text-align:center}
+#paperBody h2{margin:0 0 6px;font:800 21px/1.12 "Times New Roman",Georgia,serif;text-transform:uppercase;letter-spacing:.2px}#paperBody .lead h2{font-size:clamp(26px,4.4vw,40px)}
+#paperBody p{margin:0 0 8px;font-style:italic;color:#3b342c}
+#paperBody button{background:transparent;border:1px solid #1f1b16;color:#1f1b16;border-radius:2px;padding:4px 10px;font:600 12px Georgia,serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+#paperBody button:hover{background:#1f1b16;color:#f3eee1}#paperBody button:focus-visible,#paperClose:focus-visible{outline:2px solid #b45309;outline-offset:2px}
+#paper footer{margin-top:16px;border-top:3px double #1f1b16;padding-top:6px;font:11px Georgia,serif;color:#5c544a;text-align:center}
+#paperClose{position:absolute;right:10px;top:8px;background:transparent;border:0;color:#1f1b16;font-size:18px;cursor:pointer;padding:4px 8px}
+@media (max-width:640px){#paperBody{grid-template-columns:1fr}#paper .sheet{padding:16px}}
+#player{position:absolute;z-index:9;bottom:12px;left:274px;right:232px;max-width:none;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--panel);border:1px solid #ffffff1f;border-radius:12px;padding:8px 12px;backdrop-filter:blur(6px)}
+#player[hidden],#plList[hidden]{display:none}
+#plRow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}#plRow button,#plRow select{padding:5px 9px;font-size:13px}#plRow select{background:#1c2335;color:var(--ink);border:1px solid #ffffff1f;border-radius:8px}
+#plLoop.on{background:var(--acc);color:#04201b;border:none}#plTitle{font-size:12px;font-weight:600;color:var(--flow)}
+#plTrack{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:100%}
+#plTrack b{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0a0d16;cursor:pointer;opacity:.55;border:2px solid transparent}
+#plTrack b.done{opacity:.85}#plTrack b.cur{opacity:1;border-color:#fff;transform:scale(1.2)}
+#plInfo{font-size:12px;color:var(--mute);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#plInfo code{color:var(--ink);font:12px ui-monospace,Menlo,monospace}
+#plList{margin:0;position:absolute;z-index:9;left:274px;right:232px;bottom:118px;max-height:38%;overflow:auto;background:var(--panel);border:1px solid #ffffff1f;border-radius:12px;padding:6px}
+#plList li{list-style:none;padding:6px 8px;border-radius:8px;cursor:pointer;display:grid;grid-template-columns:22px 1fr;gap:2px 8px}#plList li:hover{background:#ffffff0d}#plList li.cur{background:#fbbf2422;outline:1px solid #fbbf2466}
+#plList li>i{font-style:normal;font-weight:700;color:var(--flow)}#plList li span{grid-column:2;color:var(--mute);font-size:12px}#plList .bd{font-size:10.5px;padding:0 6px;border-radius:999px;border:1px solid #8b93a766;color:var(--mute);margin-left:6px}#plList .bd.ind{border-style:dashed}
+#app.isolated:has(#player:not([hidden])) #isoFig{padding-bottom:118px}
+.mtag.cur{background:#fff;color:#e11d48;border-color:#e11d48;box-shadow:0 0 0 4px #e11d4866}
+@media (max-width:900px){#player,#plList{left:8px;right:8px}#plList{bottom:130px}}
+#layers{position:absolute;left:12px;bottom:12px;z-index:6;width:250px;font-size:11px;max-height:calc(100% - 90px);overflow:auto;background:var(--panel);border:1px solid #ffffff14;border-radius:12px;padding:10px 12px;font-size:12px}
+#layers summary{cursor:pointer;font-weight:600;font-size:13px}#layers label{display:grid;grid-template-columns:16px 1fr auto;gap:0 6px;align-items:start;margin-top:5px;cursor:pointer}
+#layers label input{margin:2px 0 0}#layers label b{font-weight:600}#layers label i{grid-column:2/4;font-style:normal;color:var(--mute);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#layers label em{font-style:normal;color:var(--mute);font-size:11px}
+#layers .detail{margin-top:8px;color:var(--mute);border-top:1px solid #ffffff14;padding-top:6px;line-height:1.4}
+.mtag{transform:translate(-50%,-50%);background:#e11d48;color:#fff;border-radius:999px;min-width:20px;text-align:center;padding:2px 6px;font-size:11px;border:2px solid #fff}
+.ltag{transform:translate(-50%,-100%);font-size:11.5px;background:#000c;border:1px solid #ffffff22}
+#app.isolated #layers{display:none}
+@media (max-width:700px){#layers{width:auto;left:8px;right:auto;bottom:auto;top:56px;max-height:30%}#layers[open]{right:8px}}
+#iso{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column}#iso[hidden]{display:none}
+#isoBg{position:absolute;inset:0;opacity:0}
+#isoBar{position:relative;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 12px 6px}
+#isoBar .st{font-size:12px;color:var(--mute)}
+#isoFig{position:relative;flex:1;min-height:0;padding:0 12px 12px}#isoFig svg{width:100%;height:100%;display:block}
+#app.isolated #bar,#app.isolated #panel,#app.isolated .tag,#app.isolated #hover{display:none}
+button.isoLink{background:transparent;border:1px solid #5eead466;color:var(--acc);padding:3px 8px;font-size:12px;margin-top:5px}
+#isoModal{position:absolute;inset:0;z-index:20;background:#000a;display:flex;align-items:center;justify-content:center;padding:16px}#isoModal[hidden]{display:none}
+#isoModal .card{background:#121726;border:1px solid #ffffff22;border-radius:12px;padding:16px;max-width:min(920px,100%);max-height:100%;overflow:auto;display:grid;gap:10px}
+#isoModal img{max-width:100%;max-height:60vh;border-radius:8px;border:1px solid #ffffff22;justify-self:center}
+#isoModal textarea,#isoModal input{width:100%;background:#05070d;color:#cbd5e1;border:1px solid #ffffff22;border-radius:8px;padding:8px;font:12px ui-monospace,Menlo,monospace}
+#isoModal .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#isoModal a{color:var(--acc)}
+.list .chip,.chip{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:999px;margin-left:6px;border:1px solid #8b93a766;color:var(--mute);vertical-align:1px}.chip.traced{border-color:#5eead488;color:var(--acc)}
+.mods{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:8px}.mods b{font-size:12px}.mods span{color:var(--ink);font-size:12.5px}.mods a{color:var(--acc);cursor:pointer}
+.note{font-size:12px;color:var(--mute);margin-top:4px}
+h4{margin:14px 0 4px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.list li.flowitem b{color:var(--flow)}.list li .files{font-size:11px;color:#6b7489}
+button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow);margin-top:8px;padding:6px 10px;font-size:13px}
+#modeBtn.on{background:var(--acc);color:#04201b;border:none;font-weight:600}
+.ntag{max-width:var(--pill,160px);overflow:hidden;text-overflow:ellipsis;transform:translate(-50%,-50%);font-size:11px;font-weight:600;background:#0a0d16e6;border:1px solid #ffffff1f;color:#e8ecf5}
+.ntag.hot{border-color:#fbbf24aa;color:#fbbf24}
+.dtag{transform:translate(-50%,-100%);font-size:13px}
+.ftag2{max-width:var(--box,160px);overflow:hidden;text-overflow:ellipsis;transform:translate(0,-50%);font-size:10.5px;font-weight:500;color:#8b93a7;background:none;padding:0}
+#hover{position:absolute;pointer-events:none;font-size:12px;padding:3px 8px;border-radius:6px;background:#000c;border:1px solid #ffffff22;white-space:nowrap;transform:translate(12px,-50%);display:none;z-index:5}
+@media (max-width:700px){#panel{top:auto;bottom:8px;left:8px;right:8px;width:auto;max-height:42%}#bar{left:8px;top:8px}}
+</style></head><body>
+<div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D diagram</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button></div><div id="hover"></div>
+<div id="paper" hidden role="dialog" aria-modal="true" aria-label="The Daily Commit"><article class="sheet"><button id="paperClose" aria-label="Close the paper">✕</button>
+<header><div class="ears"><span id="paperEarL"></span><span>Price: zero bugs</span></div><h1>The Daily Commit</h1><div class="dateline" id="paperDate"></div></header><div id="paperBody"></div>
+<footer>Every number is computed from the source by static analysis; the jokes are written by AI. Unreached code may still run dynamically.</footer></article></div>
+<div id="player" hidden><div id="plTitle"></div><div id="plRow"><button id="plFirst" title="First step (Home)">⏮</button><button id="plPrev" title="Previous (, or P)">◀</button><button id="plPlay" class="primary" title="Play / pause (Space)">⏸</button><button id="plNext" title="Next (. or N)">▶</button><button id="plLast" title="Last step (End)">⏭</button>
+<select id="plSpeed" title="Speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select><button id="plLoop" title="Loop">⟲ Loop</button><button id="plSteps" title="Steps list">Steps ▾</button><button id="plClose" title="Close the player">✕</button></div>
+<div id="plTrack"></div><div id="plInfo"></div></div><ol id="plList" hidden></ol>
+<div id="iso" hidden><div id="isoBg"></div><div id="isoBar"><button id="isoBack">← Back to city</button><button id="isoTheme">Light background</button><button id="isoMermaid" class="primary">Copy as Mermaid</button><button id="isoPng" class="primary">Save as PNG</button><button id="isoLinkBtn">Copy link</button><span class="st" id="isoSt"></span></div><div id="isoFig"></div></div>
+<div id="isoModal" hidden><div class="card" id="isoCard"></div></div>
+<div id="panel"><div id="crumbs"></div><div id="body"></div></div><details id="layers" open><summary>Layers</summary><div id="layerList"></div></details></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+const D=__DATA__;
+const COLORS=(D.colors||["#2dd4bf","#f59e0b","#8b5cf6","#f43f5e","#60a5fa","#84cc16"]).map(c=>parseInt(c.slice(1),16));
+const app=document.getElementById("app"),panel=document.getElementById("body"),crumbs=document.getElementById("crumbs");
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));app.prepend(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x0a0d16);scene.fog=new THREE.Fog(0x0a0d16,60,140);
+const camera=new THREE.PerspectiveCamera(40,1,0.1,1200);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.maxPolarAngle=1.35;controls.minDistance=3;controls.maxDistance=90;
+const hemi=new THREE.HemisphereLight(0xbfd4ff,0x101018,1.1);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffffff,1.4);sun.position.set(20,40,15);scene.add(sun);
+const grid=new THREE.GridHelper(400,160,0x1b2236,0x121828);grid.position.y=-0.05;scene.add(grid);
+
+// ---- layout: districts in a 2x2 grid, files as buildings, functions as floors ----
+const byPath=Object.fromEntries(D.files.map(f=>[f.path,f])),fileDistrict={};
+D.districts.forEach((d,i)=>d.files.forEach(p=>fileDistrict[p]=i));
+const cityGroups=[],loader=new THREE.TextureLoader(),pickables=[],buildings={},floors={},tags=[];
+const short=p=>p.endsWith("(block)")?p.split("/").slice(-2).join("/"):p.split("/").pop();
+const CELL=3.2,GAP=5,COLS=Math.ceil(Math.sqrt(D.districts.length));
+const sizes=D.districts.map(d=>{const c=Math.ceil(Math.sqrt(d.files.length));return Math.max(c,Math.ceil(d.files.length/c))*CELL+2.4});
+const colW=[...Array(COLS)].map((_,c)=>Math.max(...sizes.filter((_,i)=>i%COLS===c))),rowH=[...Array(Math.ceil(sizes.length/COLS))].map((_,r)=>Math.max(...sizes.slice(r*COLS,r*COLS+COLS)));
+const W=colW.reduce((a,b)=>a+b)+GAP*(COLS-1),HH=rowH.reduce((a,b)=>a+b)+GAP*(rowH.length-1),EXT=Math.max(W,HH);
+const heightOf=lines=>Math.max(0.6,0.34*Math.sqrt(lines));
+D.districts.forEach((d,i)=>{
+  const n=d.files.length,cols=Math.ceil(Math.sqrt(n)),rows=Math.ceil(n/cols),size=sizes[i],c=i%COLS,r=Math.floor(i/COLS);
+  const cx=-W/2+colW.slice(0,c).reduce((a,b)=>a+b,0)+GAP*c+colW[c]/2,cz=-HH/2+rowH.slice(0,r).reduce((a,b)=>a+b,0)+GAP*r+rowH[r]/2;
+  const tex=loader.load(`d${i%4}.jpg`);tex.colorSpace=THREE.SRGBColorSpace;
+  const plate=new THREE.Mesh(new THREE.BoxGeometry(size,0.3,size),[0,0,new THREE.MeshStandardMaterial({map:tex,roughness:.9}),0,0,0].map(m=>m||new THREE.MeshStandardMaterial({color:COLORS[i],roughness:.8})));
+  plate.position.set(cx,0,cz);plate.userData={kind:"district",i};scene.add(plate);pickables.push(plate);
+  d.center=new THREE.Vector3(cx,0,cz);d.size=size;
+  tags.push({el:tag(d.name,COLORS[i]),pos:new THREE.Vector3(cx,0.5,cz-size/2)});
+  d.files.forEach((p,j)=>{
+    const f=byPath[p],x=cx-((cols-1)*CELL)/2+(j%cols)*CELL,z=cz-((rows-1)*CELL)/2+Math.floor(j/cols)*CELL;
+    const H=heightOf(f.cluster&&D.blockHeightCap?Math.min(f.lines,D.blockHeightCap):f.lines),fns=f.functions.length?f.functions:[{name:f.cluster?"(block of small files)":"(module body)",line:1,snippet:""}];
+    const g=new THREE.Group();g.position.set(x,0.15,z);scene.add(g);cityGroups.push(g);buildings[p]={group:g,H,x,z};floors[p]={};
+    // each function = one floor, height proportional to the lines it spans
+    let y=0;fns.forEach((fn,k)=>{
+      const end=k+1<fns.length?fns[k+1].line:f.lines,h=Math.max(0.12,H*(Math.max(1,end-fn.line)/Math.max(1,f.lines-fns[0].line+1)));
+      const col=new THREE.Color(COLORS[i]).lerp(new THREE.Color(0xffffff),k%2?0.18:0.0).multiplyScalar(0.75);
+      const m=new THREE.Mesh(new THREE.BoxGeometry(f.cluster?2.6:1.9,h*0.92,f.cluster?2.6:1.9),new THREE.MeshStandardMaterial({color:col,roughness:.45,metalness:.15,emissive:0x000000}));
+      m.position.y=y+h/2;y+=h;m.userData={kind:"fn",path:p,fn,y0:y-h/2,gh:h*0.92};g.add(m);pickables.push(m);floors[p][fn.name]??=m;
+    });
+    buildings[p].H=y;
+  });
+});
+// label the landmark buildings (biggest files) so the city is recognisable from above
+// landmark labels: files on a walkthrough or holding user entry points first, then size; constants, types, generated
+// files and locales go last so they never win a label just by being long
+const FLOWFILES=new Set(D.flows.flatMap(F=>F.steps.map(s=>s.path))),ENTRYFILES=new Set((D.layers?.entries||[]).map(e=>e[0]));
+const landmarkScore=f=>(FLOWFILES.has(f.path)?2:0)+(ENTRYFILES.has(f.path)?1:0)-(/(constants?|types?|generated|\.d\.ts|locales?|icons?|schema)\b|\.json$/i.test(f.path)?3:0);
+const landmarks=n=>D.files.filter(f=>!f.cluster).sort((a,b)=>landmarkScore(b)-landmarkScore(a)||b.lines-a.lines).slice(0,n);
+landmarks(8).forEach(f=>{const b=buildings[f.path];tags.push({el:tag(short(f.path),0xe8ecf5),pos:new THREE.Vector3(b.x,b.H+0.6,b.z)})});
+const MAXH=Math.max(...Object.values(buildings).map(b=>b.H)),CITY=new THREE.Vector3(0,MAXH*0.5,0),CITYD=Math.max(EXT*1.35,MAXH*3.5);
+scene.fog=new THREE.Fog(0x0a0d16,EXT*1.1,EXT*3);controls.maxDistance=EXT*2.2;
+tags.forEach(t=>t.city=true);
+// ---- city layers: every layer comes from static analysis of the source (layers.py), never decoration ----
+const LY=D.layers,home=D.home||{},bOf=p=>buildings[home[p]||p],dOf=p=>fileDistrict[home[p]||p];
+const ON={roads:true,traffic:true,metro:true,ghost:true,buses:false,flights:false,power:false,cranes:false,night:false};
+const LG={};for(const k of ["roads","traffic","buses","flights","power","cranes","ghost"]){const g=new THREE.Group();g.visible=false;scene.add(g);LG[k]=g}
+const DETAIL=new THREE.Group(),LAND=new THREE.Group();scene.add(DETAIL,LAND);
+const dummy=new THREE.Object3D(),V=(x,y,z)=>new THREE.Vector3(x,y,z);
+function inst(geo,mat,n,group){const m=new THREE.InstancedMesh(geo,mat,Math.max(1,n));m.count=n;m.frustumCulled=false;group.add(m);return m}
+// streets: the gaps between building columns/rows of each district, outermost ones form the ring road
+const ST=D.districts.map(d=>{const n=d.files.length,cols=Math.ceil(Math.sqrt(n)),rows=Math.ceil(n/cols),cx=d.center.x,cz=d.center.z;
+  return {xs:[...Array(cols+1)].map((_,c)=>cx-((cols-1)*CELL)/2+(c-0.5)*CELL),zs:[...Array(rows+1)].map((_,r)=>cz-((rows-1)*CELL)/2+(r-0.5)*CELL),cx,cz,size:d.size}});
+const near=(arr,v)=>arr.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a);
+function gate(i,j){const a=ST[i],b=ST[j],dx=b.cx-a.cx,dz=b.cz-a.cz;return Math.abs(dx)>Math.abs(dz)?{side:"x",p:V(a.cx+Math.sign(dx)*a.size/2,0.22,near(a.zs,a.cz))}:{side:"z",p:V(near(a.xs,a.cx),0.22,a.cz+Math.sign(dz)*a.size/2)}}
+const Y=0.22,streetPt=b=>V(b.x+CELL/2,Y,b.z);
+// a route drives along the streets to the district gate, over the bridge, and down the streets to the target
+function toGate(s,i,g){const t=ST[i];if(g.side==="x"){const zS=g.p.z,ex=g.p.x>t.cx?Math.max(...t.xs):Math.min(...t.xs);return [s,V(s.x,Y,zS),V(ex,Y,zS),g.p]}
+  const ez=g.p.z>t.cz?Math.max(...t.zs):Math.min(...t.zs);return [s,V(s.x,Y,ez),V(g.p.x,Y,ez),g.p]}
+function route(pa,pb){const A=bOf(pa),B=bOf(pb);if(!A||!B||A===B)return null;const da=dOf(pa),db=dOf(pb),sA=streetPt(A),sB=streetPt(B);
+  if(da===db)return [sA,V(sA.x,Y,sB.z),sB];return [...toGate(sA,da,gate(da,db)),...toGate(sB,db,gate(db,da)).reverse()]}
+function poly(pts){const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+pts[i].distanceTo(pts[i-1]));return {pts,L,len:L[L.length-1]}}
+function at(r,u,out){const d=u*r.len;let i=1;while(i<r.L.length-1&&r.L[i]<d)i++;const a=r.pts[i-1],b=r.pts[i],k=(d-r.L[i-1])/Math.max(1e-6,r.L[i]-r.L[i-1]);out.lerpVectors(a,b,k);return Math.atan2(-(b.z-a.z),b.x-a.x)}
+const COUNTS={};
+// 1. roads & bridges (imports)
+{const asphalt=new THREE.MeshStandardMaterial({color:0x262b36,roughness:.95}),line=new THREE.MeshBasicMaterial({color:0x8a7a3a});
+  const strips=[];ST.forEach(t=>{const z0=Math.min(...t.zs),z1=Math.max(...t.zs),x0=Math.min(...t.xs),x1=Math.max(...t.xs);t.xs.forEach(x=>strips.push([x,(z0+z1)/2,0.9,z1-z0+0.9]));t.zs.forEach(z=>strips.push([(x0+x1)/2,z,x1-x0+0.9,0.9]))});
+  const sm=inst(new THREE.BoxGeometry(1,0.03,1),asphalt,strips.length,LG.roads);strips.forEach(([x,z,w,d],i)=>{dummy.position.set(x,0.165,z);dummy.rotation.set(0,0,0);dummy.scale.set(w,1,d);dummy.updateMatrix();sm.setMatrixAt(i,dummy.matrix)});
+  const piers=[];LY.roads.highways.forEach(([a,b,n])=>{const ga=gate(a,b).p,gb=gate(b,a).p,len=ga.distanceTo(gb),w=Math.min(4,0.7+0.55*Math.log2(1+n)),ang=Math.atan2(-(gb.z-ga.z),gb.x-ga.x),mid=ga.clone().lerp(gb,.5);
+    const deck=new THREE.Mesh(new THREE.BoxGeometry(len,0.14,w),asphalt);deck.position.set(mid.x,0.3,mid.z);deck.rotation.y=ang;LG.roads.add(deck);
+    const c=new THREE.Mesh(new THREE.BoxGeometry(len,0.02,0.08),line);c.position.set(mid.x,0.38,mid.z);c.rotation.y=ang;LG.roads.add(c);
+    for(let s=3;s<len-2;s+=4)piers.push(ga.clone().lerp(gb,s/len))});
+  const pm=inst(new THREE.CylinderGeometry(.18,.22,.3,8),asphalt,piers.length,LG.roads);piers.forEach((p,i)=>{dummy.position.set(p.x,0.15,p.z);dummy.scale.set(1,1,1);dummy.updateMatrix();pm.setMatrixAt(i,dummy.matrix)});
+  COUNTS.roads=`${LY.roads.imports.toLocaleString()} imports · ${LY.roads.highways.length} bridges`}
+// 2. traffic: cars on the routes of cross-file static calls, more calls = more cars
+const movers=[];
+function fleet(list,group,geo,colors,speed,maxPer){const vs=[];list.forEach(([a,b,n],ri)=>{const r=route(a,b);if(!r)return;const R=poly(r.map(p=>p.clone()));const k=Math.min(maxPer,Math.ceil(n/3));for(let j=0;j<k;j++)vs.push({R,u:Math.random(),dir:1,sp:speed*(0.8+Math.random()*0.4)})});
+  const m=inst(geo,new THREE.MeshStandardMaterial({roughness:.5,metalness:.2}),vs.length,group);const c=new THREE.Color();vs.forEach((v,i)=>m.setColorAt(i,c.setHex(colors[i%colors.length])));if(m.instanceColor)m.instanceColor.needsUpdate=true;
+  movers.push({m,vs,group});return vs.length}
+const nCars=fleet(LY.traffic.pairs.slice(0,260),LG.traffic,new THREE.BoxGeometry(.5,.22,.28),[0xe5e7eb,0x60a5fa,0xf87171,0x34d399,0xfbbf24,0xa78bfa],3.2,4);
+COUNTS.traffic=`${LY.traffic.edges.toLocaleString()} calls · ${nCars} cars`;
+// 3. buses: event routes publisher -> subscriber (emitters, component props), DOM listeners from the browser depot; stops at subscribers
+const W2=Math.max(...ST.map(t=>Math.abs(t.cx)+t.size/2)),H2=Math.max(...ST.map(t=>Math.abs(t.cz)+t.size/2));
+const DEPOT=V(0,Y,-H2-9);{const dep=new THREE.Mesh(new THREE.BoxGeometry(5,1.2,2.4),new THREE.MeshStandardMaterial({color:0xca8a04}));dep.position.set(DEPOT.x,0.6,DEPOT.z);LG.buses.add(dep)}
+{const vs=[];const add=(r,n)=>{const R=poly(r);for(let j=0;j<Math.min(2,n);j++)vs.push({R,u:Math.random(),dir:1,sp:2*(0.8+Math.random()*0.4)})};const stops=new Set();
+  LY.buses.routes.slice(0,170).forEach(([a,b,k,n])=>{const r=route(a,b);if(r){add(r,n);stops.add(home[b]||b)}});
+  LY.buses.dom.forEach(([p,n])=>{const B=bOf(p);if(!B)return;const d=dOf(p),t=ST[d],s=streetPt(B),ez=Math.min(...t.zs);add([DEPOT.clone(),V(near(t.xs,DEPOT.x>t.cx?t.cx+t.size:t.cx-t.size),Y,DEPOT.z),V(s.x,Y,t.cz-t.size/2),V(s.x,Y,ez),s],n);stops.add(home[p]||p)});
+  const m=inst(new THREE.BoxGeometry(.9,.42,.36),new THREE.MeshStandardMaterial({color:0xfacc15,roughness:.5}),vs.length,LG.buses);movers.push({m,vs,group:LG.buses});
+  const st=[...stops].map(p=>buildings[p]).filter(Boolean),sm=inst(new THREE.BoxGeometry(.5,.5,.18),new THREE.MeshStandardMaterial({color:0xfde047,emissive:0x3a2a00}),st.length,LG.buses);
+  st.forEach((b,i)=>{dummy.position.set(b.x+CELL/2-0.55,0.4,b.z+0.7);dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();sm.setMatrixAt(i,dummy.matrix)});
+  COUNTS.buses=`${LY.buses.routes.length} event routes · ${LY.buses.dom.reduce((a,x)=>a+x[1],0)} DOM listeners · ${st.length} stops`}
+tags.push({el:Object.assign(tag("Browser events depot",0xfacc15),{className:"tag ltag"}),pos:V(DEPOT.x,1.6,DEPOT.z),layer:"buses"});
+// 4. flights: external / async I/O to the airport at the city edge, one terminal per service
+const AIR=V(W2+16,0,0),planes=[];
+{const run=new THREE.Mesh(new THREE.BoxGeometry(4,0.06,26),new THREE.MeshStandardMaterial({color:0x3f4654}));run.position.set(AIR.x+4,0.05,0);LG.flights.add(run);
+  const used=LY.flights.services.filter(s=>LY.flights.routes.some(r=>r[1]===s)),term={};
+  used.forEach((s,i)=>{const z=(i-(used.length-1)/2)*4.2,t=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.4,2.6),new THREE.MeshStandardMaterial({color:0x93c5fd}));t.position.set(AIR.x-1.5,0.7,z);LG.flights.add(t);term[s]=V(AIR.x-1.5,1.6,z);
+    tags.push({el:Object.assign(tag(`✈ ${s}`,0x93c5fd),{className:"tag ltag"}),pos:V(AIR.x-1.5,2.2,z),layer:"flights"})});
+  const arcMat=new THREE.LineDashedMaterial({color:0x93c5fd,dashSize:.6,gapSize:.5,transparent:true,opacity:.55});
+  LY.flights.routes.forEach(([p,s,n])=>{const B=bOf(p);if(!B||!term[s])return;const a=V(B.x,B.H+0.6,B.z),b=term[s],mid=a.clone().lerp(b,.5);mid.y=6+a.distanceTo(b)*0.22;
+    const c=new THREE.QuadraticBezierCurve3(a,mid,b),g=new THREE.BufferGeometry().setFromPoints(c.getPoints(40)),l=new THREE.Line(g,arcMat);l.computeLineDistances();LG.flights.add(l);
+    for(let j=0;j<Math.min(2,n);j++)planes.push({c,u:Math.random(),sp:0.12+Math.random()*0.05})});
+  const m=inst(new THREE.ConeGeometry(.22,.8,6).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0xf8fafc,emissive:0x1e293b}),planes.length,LG.flights);planes.m=m;
+  COUNTS.flights=`${LY.flights.routes.length} I/O links · ${used.length} services`}
+// 5. power lines: shared state plants -> buildings that read (blue), write (orange) or both (white)
+{const plants={};LY.power.plants.forEach((pl,i)=>{const z=(i-1)*14,P=V(-W2-14,0,z),b=new THREE.Mesh(new THREE.BoxGeometry(4,2.4,4),new THREE.MeshStandardMaterial({color:0x64748b}));b.position.set(P.x,1.2,z);LG.power.add(b);
+    for(const dz of[-1,1]){const ch=new THREE.Mesh(new THREE.CylinderGeometry(.35,.45,3.2,10),new THREE.MeshStandardMaterial({color:0x94a3b8}));ch.position.set(P.x+1,3.6,z+dz*0.9);LG.power.add(ch)}
+    plants[pl]=V(P.x+2,5,z);tags.push({el:Object.assign(tag(`⚡ ${pl}`,0xfde68a),{className:"tag ltag"}),pos:V(P.x,6.4,z),layer:"power"})});
+  const segs={r:[],w:[],b:[]},pyl=[];
+  LY.power.lines.slice(0,170).forEach(([p,pl,r,w])=>{const B=bOf(p);if(!B)return;const a=plants[pl],t=V(B.x,B.H+0.4,B.z),k=r&&w?"b":w?"w":"r";
+    const p1=a.clone().lerp(t,1/3).setY(5),p2=a.clone().lerp(t,2/3).setY(5);pyl.push(p1,p2);
+    const pts=[a,p1,p2,t];for(let i=1;i<pts.length;i++){const A=pts[i-1],Bp=pts[i];for(let j=0;j<8;j++){const u0=j/8,u1=(j+1)/8,s0=Math.sin(Math.PI*u0)*0.6,s1=Math.sin(Math.PI*u1)*0.6;
+      segs[k].push(A.clone().lerp(Bp,u0).add(V(0,-s0,0)),A.clone().lerp(Bp,u1).add(V(0,-s1,0)))}}});
+  for(const [k,col] of [["r",0x38bdf8],["w",0xfb923c],["b",0xf1f5f9]])if(segs[k].length)LG.power.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(segs[k]),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.75})));
+  const pm=inst(new THREE.BoxGeometry(.12,5,.12),new THREE.MeshStandardMaterial({color:0x9ca3af}),pyl.length,LG.power);pyl.forEach((p,i)=>{dummy.position.set(p.x,2.5,p.z);dummy.scale.set(1,1,1);dummy.rotation.set(0,0,0);dummy.updateMatrix();pm.setMatrixAt(i,dummy.matrix)});
+  COUNTS.power=`${LY.power.edges} state links · ${LY.power.plants.length} plants`}
+// 7. cranes: files changed most in the last 90 days of git history
+{const top=LY.cranes.files.filter(([p,n])=>n>=3&&bOf(p)).slice(0,40),mat=new THREE.MeshStandardMaterial({color:0xf97316,roughness:.6});
+  top.forEach(([p,n])=>{const B=bOf(p),h=Math.min(7,2+n*0.18),j=Math.min(4,1.4+n*0.08),g=new THREE.Group();g.position.set(B.x+0.5,B.H+0.15,B.z-0.5);
+    const mast=new THREE.Mesh(new THREE.BoxGeometry(.14,h,.14),mat);mast.position.y=h/2;const jib=new THREE.Mesh(new THREE.BoxGeometry(j,.1,.1),mat);jib.position.set(j/2-0.5,h,0);
+    const cw=new THREE.Mesh(new THREE.BoxGeometry(.35,.25,.25),new THREE.MeshStandardMaterial({color:0x334155}));cw.position.set(-0.6,h-0.1,0);g.add(mast,jib,cw);g.rotation.y=Math.random()*6.28;LG.cranes.add(g)});
+  COUNTS.cranes=`${LY.cranes.commits} commits · ${LY.cranes.files.length} files changed · ${top.length} cranes`}
+COUNTS.metro=`${D.flows.length} lines`;
+const GHOSTW=[];
+// ghost town: functions no user action reaches in the static call graph (they may still run dynamically, e.g. via
+// dynamic imports, tests or external callers): faded, cracked floors; a For Sale sign where most of a building is unreached;
+// tumbleweeds rolling through each district in proportion to its unreached share
+const deadFn=(p,n)=>{const R=D.reach?.[p+"::"+n];return !!R&&R.n===0&&R.b!=="infra"};
+{const fade=[],cracks=[],sale=[],dist=D.districts.map(()=>[0,0]);let dead=0;
+  for(const f of D.files){if(f.cluster)continue;const B=buildings[f.path];if(!B)continue;let d=0,n=0;
+    B.group.children.forEach(m=>{const fn=m.userData.fn;if(!D.reach?.[f.path+"::"+fn.name])return;n++;if(!deadFn(f.path,fn.name))return;d++;
+      const gh=m.userData.gh,y=0.15+m.userData.y0;if(gh<0.1)return;
+      fade.push({x:B.x,y,z:B.z+0.962,ry:0,w:1.92,h:gh},{x:B.x+0.962,y,z:B.z,ry:Math.PI/2,w:1.92,h:gh});
+      const r=((B.x*7.3+y*13.1)%1+1)%1;if(gh>0.25)cracks.push({x:B.x-0.5+r,y,z:B.z+0.966,ry:0,rz:0.5+r*0.6,h:Math.min(0.9,gh*0.9)},{x:B.x+0.966,y,z:B.z+0.4-r*0.8,ry:Math.PI/2,rz:-0.6,h:Math.min(0.9,gh*0.9)})});
+    dead+=d;const di=fileDistrict[f.path];if(di!==undefined){dist[di][0]+=d;dist[di][1]+=n}
+    if(n>=2&&d/n>0.5)sale.push(B)}
+  const fm=inst(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0x6b7080,transparent:true,opacity:.62,depthWrite:false}),fade.length,LG.ghost);
+  fade.forEach((q,i)=>{dummy.position.set(q.x,q.y,q.z);dummy.rotation.set(0,q.ry,0);dummy.scale.set(q.w,q.h,1);dummy.updateMatrix();fm.setMatrixAt(i,dummy.matrix)});
+  const cm=inst(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0x14161c}),cracks.length,LG.ghost);
+  cracks.forEach((q,i)=>{dummy.position.set(q.x,q.y,q.z);dummy.rotation.set(0,q.ry,q.rz);dummy.scale.set(0.045,q.h,1);dummy.updateMatrix();cm.setMatrixAt(i,dummy.matrix)});
+  const c=document.createElement("canvas");c.width=256;c.height=128;const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,256,128);g.strokeStyle="#c81e1e";g.lineWidth=12;g.strokeRect(6,6,244,116);
+  g.fillStyle="#c81e1e";g.font="bold 54px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText("FOR SALE",128,66);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
+  const sb=inst(new THREE.PlaneGeometry(0.62,0.31),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}),sale.length,LG.ghost),sp=inst(new THREE.BoxGeometry(.05,.62,.05),new THREE.MeshStandardMaterial({color:0x6b4f2a}),sale.length,LG.ghost);
+  sale.forEach((B,i)=>{dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.position.set(B.x+0.62,0.62,B.z+1.25);dummy.updateMatrix();sb.setMatrixAt(i,dummy.matrix);dummy.position.set(B.x+0.62,0.46,B.z+1.24);dummy.updateMatrix();sp.setMatrixAt(i,dummy.matrix)});
+  // tumbleweeds roll along a district's streets: about one per 7% of its functions that are unreached
+  const tw=[];dist.forEach(([d,n],i)=>{const t=ST[i];if(!t||!n)return;const k=Math.min(14,Math.round(14*d/n));
+    for(let j=0;j<k;j++){const along=j%2,lines=along?t.xs:t.zs,fixed=lines[(j*3)%lines.length],span=along?[Math.min(...t.zs),Math.max(...t.zs)]:[Math.min(...t.xs),Math.max(...t.xs)];
+      tw.push({along,fixed,a:span[0],b:span[1],u:Math.random(),dir:1,sp:0.35+Math.random()*0.25,rot:0})}});
+  const tm=inst(new THREE.IcosahedronGeometry(.2,0),new THREE.MeshStandardMaterial({color:0xa8865a,roughness:1,flatShading:true}),tw.length,LG.ghost);GHOSTW.push({m:tm,tw});
+  COUNTS.ghost=`${dead.toLocaleString()} unreached · ${sale.length} for sale`}
+
+// ---- detail when close: windows per function (lit at night if exported or called), doors for exported functions, rooftop signs;
+// always: spires + plazas on files with user entry points, parks with trees and lamps for test files ----
+const winPos=[],litPos=[],doorPos=[];
+for(const f of D.files){if(f.cluster)continue;const B=buildings[f.path];if(!B)continue;let exported=0;
+  B.group.children.forEach(m=>{const fn=m.userData.fn,info=LY.functions[f.path+"::"+fn.name]||[0,0];exported+=info[0];const gh=m.userData.gh;if(gh<0.2)return;
+    const lit=Math.min(3,info[0]+Math.ceil(Math.log2(1+info[1]))),y=0.15+m.userData.y0,h=Math.min(0.42,gh*0.55);
+    [-0.55,0,0.55].forEach((o,k)=>{const fz={x:B.x+o,y,z:B.z+0.955,ry:0,h},fx={x:B.x+0.955,y,z:B.z-o,ry:Math.PI/2,h};winPos.push(fz,fx);if(k<lit)litPos.push(fz,fx)})});
+  for(let k=0;k<Math.min(5,exported);k++)doorPos.push({x:B.x-0.7+k*0.35,y:0.15+0.25,z:B.z+0.96,ry:0,h:0.5})}
+function quads(list,mat,group,w){const m=inst(new THREE.PlaneGeometry(1,1),mat,list.length,group);list.forEach((q,i)=>{dummy.position.set(q.x,q.y,q.z);dummy.rotation.set(0,q.ry,0);dummy.scale.set(w,q.h,1);dummy.updateMatrix();m.setMatrixAt(i,dummy.matrix)});return m}
+const winDark=quads(winPos,new THREE.MeshStandardMaterial({color:0x1b2433,roughness:.2,metalness:.5}),DETAIL,0.3);
+const LIT=new THREE.Group();scene.add(LIT);quads(litPos,new THREE.MeshBasicMaterial({color:0xffd27a}),LIT,0.3);LIT.position.set(0.004,0,0.004);
+quads(doorPos,new THREE.MeshStandardMaterial({color:0x3b2a1a}),DETAIL,0.26);
+// rooftop signs on landmark files
+landmarks(12).forEach(f=>{const B=buildings[f.path],c=document.createElement("canvas"),g=c.getContext("2d"),t=short(f.path);c.width=512;c.height=96;
+  g.fillStyle="#0b1220";g.fillRect(0,0,512,96);g.strokeStyle="#5eead4";g.lineWidth=6;g.strokeRect(3,3,506,90);g.fillStyle="#e8ecf5";g.font="bold 52px system-ui,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillText(t,256,50);
+  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Mesh(new THREE.PlaneGeometry(2.6,0.5),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));sp.position.set(B.x,B.H+0.55,B.z+0.2);DETAIL.add(sp);
+  const post=new THREE.Mesh(new THREE.BoxGeometry(.06,.35,.06),new THREE.MeshStandardMaterial({color:0x475569}));post.position.set(B.x,B.H+0.2,B.z+0.2);DETAIL.add(post)});
+// entry-point landmarks: a gold spire (taller = more user entry points) and a stone plaza
+{const es=LY.entries.filter(([p])=>buildings[p]&&!byPath[p]?.cluster),sp=inst(new THREE.ConeGeometry(.42,1,10),new THREE.MeshStandardMaterial({color:0xfbbf24,metalness:.6,roughness:.3}),es.length,LAND),
+   pz=inst(new THREE.BoxGeometry(2.9,.04,2.9),new THREE.MeshStandardMaterial({color:0x8d8a80,roughness:.9}),es.length,LAND);
+  es.forEach(([p,n],i)=>{const B=buildings[p],h=0.8+0.3*Math.min(8,n);dummy.rotation.set(0,0,0);dummy.position.set(B.x,0.15+B.H+h/2,B.z);dummy.scale.set(1,h,1);dummy.updateMatrix();sp.setMatrixAt(i,dummy.matrix);
+    dummy.position.set(B.x,0.17,B.z);dummy.scale.set(1,1,1);dummy.updateMatrix();pz.setMatrixAt(i,dummy.matrix)});COUNTS.entries=es.length}
+// parks: one per district along its north edge, a tree per test file (capped), a lamp every 4 trees
+{const trees=[],lamps=[];Object.entries(LY.parks).forEach(([d,n])=>{const t=ST[+d];if(!t)return;const z=t.cz-t.size/2-1.6,k=Math.min(36,n),x0=t.cx-t.size/2+0.8,dx=(t.size-1.6)/Math.max(1,k-1);
+    const park=new THREE.Mesh(new THREE.BoxGeometry(t.size,0.08,2.4),new THREE.MeshStandardMaterial({color:0x1f5130,roughness:1}));park.position.set(t.cx,0.04,z);LAND.add(park);
+    for(let i=0;i<k;i++){trees.push(V(x0+i*dx,0,z+(i%2?0.45:-0.45)));if(i%4===0)lamps.push(V(x0+i*dx,0,z+1.05))}});
+  const tr=inst(new THREE.ConeGeometry(.32,.9,7),new THREE.MeshStandardMaterial({color:0x2f7d46}),trees.length,LAND),lp=inst(new THREE.CylinderGeometry(.03,.03,.7,5),new THREE.MeshStandardMaterial({color:0x94a3b8,emissive:0x000000}),lamps.length,LAND);
+  trees.forEach((p,i)=>{dummy.position.set(p.x,0.55,p.z);dummy.scale.set(1,1,1);dummy.rotation.set(0,0,0);dummy.updateMatrix();tr.setMatrixAt(i,dummy.matrix)});
+  lamps.forEach((p,i)=>{dummy.position.set(p.x,0.4,p.z);dummy.updateMatrix();lp.setMatrixAt(i,dummy.matrix)});lp.userData.lamp=true;LAND.userData.lamps=lp;COUNTS.parks=trees.length}
+// ---- layer panel ----
+const LEGEND=[["roads","Roads & bridges","Imports: streets inside each module, bridges between modules (wider = more imports across)."],
+ ["traffic","Traffic","Direct calls between files: more cars = more calls."],["buses","Buses","Events: who publishes, who listens (emitters, component props, DOM listeners). Stops at listeners."],
+ ["flights","Flights",`External and async I/O (${LY.flights.services.filter(s=>LY.flights.routes.some(r=>r[1]===s)).join(", ")}) flying to the airport.`],
+ ["power","Power lines",`Shared state: ${LY.power.plants.join(", ")}. Orange writes, blue reads, white both.`],
+ ["metro","Metro","The walkthrough you play becomes a metro line with numbered stations."],
+ ["ghost","Ghost town","Functions no user action reaches in the static call graph (may still run dynamically): faded, cracked floors, tumbleweeds, For Sale signs."],["cranes","Cranes","Files changed most in the last 90 days (git history)."],
+ ["night","Night","Lit windows: functions that are exported or called by others."]];
+document.getElementById("layerList").innerHTML=LEGEND.map(([k,n,t])=>`<label title="${t}"><input type="checkbox" data-k="${k}" ${ON[k]?"checked":""}><b>${n}</b><em>${(COUNTS[k]||"").split(" · ")[0]}</em><i>${t}</i></label>`).join("")+
+  `<div class="detail">Close up: windows = functions on each floor, doors = exported functions, gold spires = user entry points (${COUNTS.entries} files), parks = test files (${COUNTS.parks} trees).</div>`;
+if(innerWidth<700)document.getElementById("layers").removeAttribute("open");
+document.getElementById("layers").addEventListener("toggle",()=>placePlayer());
+document.getElementById("layerList").addEventListener("change",e=>{const k=e.target.dataset.k;ON[k]=e.target.checked;if(k==="night")setNight(ON.night)});
+function setNight(on){scene.background.setHex(on?0x03040a:0x0a0d16);for(const f of[scene.fog,fogSaved])f?.color.setHex(on?0x03040a:0x0a0d16);hemi.intensity=on?0.22:1.1;sun.intensity=on?0.12:1.4;
+  LAND.userData.lamps?.material.emissive.setHex(on?0xfff1b8:0)}
+let lastT=0;const pv=new THREE.Vector3();
+function updateLayers(now){const dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;const city=mode==="3d"&&!open.path,close=city&&camera.position.distanceTo(controls.target)<42;
+  for(const k in LG)LG[k].visible=city&&ON[k];DETAIL.visible=close;LIT.visible=city&&ON.night;LAND.visible=city;
+  for(const mv of movers){if(!mv.group.visible)continue;mv.vs.forEach((v,i)=>{v.u+=v.dir*v.sp*dt/Math.max(1,v.R.len);if(v.u>1){v.u=1;v.dir=-1}if(v.u<0){v.u=0;v.dir=1}
+    const ang=at(v.R,v.u,pv);dummy.position.copy(pv);dummy.position.y+=0.13;dummy.rotation.set(0,ang+(v.dir<0?Math.PI:0),0);dummy.scale.set(1,1,1);dummy.updateMatrix();mv.m.setMatrixAt(i,dummy.matrix)});mv.m.instanceMatrix.needsUpdate=true}
+  if(LG.ghost.visible)for(const {m,tw} of GHOSTW){tw.forEach((t,i)=>{t.u+=t.dir*t.sp*dt/Math.max(1,t.b-t.a);if(t.u>1){t.u=1;t.dir=-1}if(t.u<0){t.u=0;t.dir=1}t.rot+=t.dir*dt*2.6;
+    const v=t.a+(t.b-t.a)*t.u,bounce=Math.abs(Math.sin(t.rot*1.3))*0.12;dummy.position.set(t.along?t.fixed:v,0.36+bounce,t.along?v:t.fixed);dummy.rotation.set(t.along?t.rot:0,0,t.along?0:-t.rot);dummy.scale.set(1,1,1);dummy.updateMatrix();m.setMatrixAt(i,dummy.matrix)});m.instanceMatrix.needsUpdate=true}
+  if(LG.flights.visible&&planes.m){planes.forEach((pl,i)=>{pl.u=(pl.u+pl.sp*dt)%2;const u=pl.u<1?pl.u:2-pl.u;pl.c.getPoint(u,pv);const nx=pl.c.getPoint(Math.min(1,Math.max(0,u+(pl.u<1?0.01:-0.01))));
+    dummy.position.copy(pv);dummy.lookAt(nx);dummy.scale.set(1,1,1);dummy.updateMatrix();planes.m.setMatrixAt(i,dummy.matrix)});planes.m.instanceMatrix.needsUpdate=true}
+  return close}
+// metro: the played walkthrough drawn as a thick line with numbered stations
+const metroTags=[];
+function metroArc(a,b){return ON.metro?arc(a,b,0xe11d48,.17,true):arc(a,b,0xfbbf24,.09)}
+function station(p,k){if(!ON.metro)return;const s=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.12,20),new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false}));s.renderOrder=11;s.position.copy(p).add(V(0,0.4,0));scene.add(s);arcs.push(s);
+  const el=tag(String(k),0xffffff);el.className="tag mtag";const t={el,pos:p.clone().add(V(0,0.9,0)),metro:true};tags.push(t);metroTags.push(t);return t}
+
+function tag(text,color){const e=document.createElement("div");e.className="tag";e.textContent=text;e.style.color="#"+color.toString(16).padStart(6,"0");app.appendChild(e);return e}
+
+// ---- camera transitions ----
+let anim=null;
+function fly(target,dist,elev=0.9,dur=900){if(anim)anim.ok();target=target.clone();if(app.clientWidth>700){const r=new THREE.Vector3().subVectors(camera.position,controls.target);r.y=0;const side=new THREE.Vector3(r.z,0,-r.x).normalize();target.addScaledVector(side,dist*0.18)}const dir=new THREE.Vector3(0.55,elev,1).normalize();let ok;const pr=new Promise(r=>ok=r);anim={t0:performance.now(),dur,ok,fromP:camera.position.clone(),fromT:controls.target.clone(),toT:target.clone(),toP:target.clone().add(dir.multiplyScalar(dist))};return pr}
+function stepAnim(now){if(!anim)return;const u=Math.min(1,(now-anim.t0)/anim.dur),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+  camera.position.lerpVectors(anim.fromP,anim.toP,e);controls.target.lerpVectors(anim.fromT,anim.toT,e);if(u>=1){const a=anim;anim=null;a.ok()}}
+// generic eased tweens (building open/close, fades)
+const tweens=[],wait=ms=>new Promise(r=>setTimeout(r,ms));
+function tween(dur,fn){return new Promise(ok=>tweens.push({t0:performance.now(),dur,fn,ok}))}
+function stepTweens(now){for(let i=tweens.length-1;i>=0;i--){const t=tweens[i],u=Math.min(1,(now-t.t0)/t.dur),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;t.fn(e);if(u>=1){tweens.splice(i,1);t.ok()}}}
+
+// ---- function dive: a building opens into a stack of labelled floors, one per function ----
+const OPENW=2.3,open={path:null,L:null,objs:[],tags:[],busy:Promise.resolve()},backBtn=document.getElementById("backBtn");
+function layoutFor(p){const f=byPath[p],ms=buildings[p].group.children;
+  const lines=ms.map((m,k)=>Math.max(1,(k+1<ms.length?ms[k+1].userData.fn.line:f.lines)-m.userData.fn.line));
+  const flowFns=new Set(D.flows.flatMap(F=>F.steps.filter(s=>s.path===p).map(s=>s.function)));
+  // label every floor the flows touch, then the biggest functions, up to 12
+  const lab=new Set(ms.map((m,k)=>flowFns.has(m.userData.fn.name)?k:-1).filter(k=>k>=0));
+  for(const k of ms.map((_,k)=>k).sort((a,b)=>lines[b]-lines[a])){if(lab.size>=12)break;lab.add(k)}
+  const T=Math.min(26,Math.max(9,ms.length*0.6)),G=ms.length>60?0.025:0.06,raw=ms.map((_,k)=>Math.sqrt(lines[k])*(lab.has(k)?1:0.35));
+  const sc=Math.max(0,T-G*ms.length)/raw.reduce((a,b)=>a+b,0);let y=0;
+  const items=ms.map((_,k)=>{const h=lab.has(k)?Math.max(0.42,raw[k]*sc):Math.max(0.05,raw[k]*sc),it={y:y+h/2,h};y+=h+G;return it});
+  return {T:y,lab,items,flowFns}}
+const others=p=>Object.entries(buildings).filter(([q])=>q!==p).flatMap(([,b])=>b.group.children);
+function openBuilding(p){return open.busy=open.busy.then(async()=>{if(open.path===p)return;if(open.path)await doClose();
+  const b=buildings[p],ms=b.group.children,L=layoutFor(p);open.path=p;open.L=L;backBtn.hidden=false;
+  const from=ms.map(m=>({y:m.position.y,s:m.scale.y,w:m.scale.x})),fade=others(p);fade.forEach(m=>{m.material.transparent=true;m.material.depthWrite=false;m.material.needsUpdate=true});
+  fly(new THREE.Vector3(b.x,L.T*0.5,b.z),L.T*1.25+6,0.28,850);
+  await tween(850,e=>{ms.forEach((m,k)=>{const it=L.items[k];m.position.y=from[k].y+(it.y-from[k].y)*e;m.scale.y=from[k].s+(it.h*0.92/m.userData.gh-from[k].s)*e;m.scale.x=m.scale.z=from[k].w+(OPENW-from[k].w)*e});
+    fade.forEach(m=>m.material.opacity=1-0.9*e)});
+  ms.forEach((m,k)=>{if(!L.lab.has(k))return;const fn=m.userData.fn,el=tag(`${fn.name}()  L${fn.line}`,L.flowFns.has(fn.name)?0xfbbf24:0xcbd5e1);el.classList.add("ftag");
+    const t={el,pos:new THREE.Vector3(),fl:m,hw:0.95*OPENW+0.25};tags.push(t);open.tags.push(t)})})}
+async function doClose(){const p=open.path;if(!p)return;const ms=buildings[p].group.children,fade=others(p);
+  open.tags.forEach(t=>{t.el.remove();tags.splice(tags.indexOf(t),1)});open.tags=[];open.objs.forEach(o=>scene.remove(o));open.objs=[];
+  const from=ms.map(m=>({y:m.position.y,s:m.scale.y,w:m.scale.x}));
+  await tween(800,e=>{ms.forEach((m,k)=>{m.position.y=from[k].y+(m.userData.y0-from[k].y)*e;m.scale.y=from[k].s+(1-from[k].s)*e;m.scale.x=m.scale.z=from[k].w+(1-from[k].w)*e});
+    fade.forEach(m=>m.material.opacity=0.1+0.9*e)});
+  fade.forEach(m=>{m.material.transparent=false;m.material.depthWrite=true;m.material.opacity=1;m.material.needsUpdate=true});open.path=null;open.L=null;backBtn.hidden=true}
+function closeBuilding(){return open.busy=open.busy.then(doClose)}
+const camRight=()=>{const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);r.y=0;return r.normalize()};
+// a point on the left face of an open floor, where the flow path runs
+function floorPoint(p,name){const m=floors[p][name]||Object.values(floors[p])[0],v=new THREE.Vector3();m.getWorldPosition(v);return v.addScaledVector(camRight(),-(0.95*OPENW+0.15))}
+function hop(a,b,indirect){const mid=a.clone().lerp(b,.5).addScaledVector(camRight(),-(0.9+a.distanceTo(b)*0.12)),curve=new THREE.QuadraticBezierCurve3(a,mid,b);
+  const mat=new THREE.MeshBasicMaterial({color:0xfbbf24,transparent:true,opacity:.95,depthTest:false}),add=g=>{const t=new THREE.Mesh(g,mat);t.renderOrder=10;scene.add(t);open.objs.push(t)};
+  if(!indirect)add(new THREE.TubeGeometry(curve,40,.08,6));
+  else{const N=16;for(let j=0;j<N;j+=2)add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([curve.getPoint(j/N),curve.getPoint((j+.5)/N),curve.getPoint((j+1)/N)]),4,.07,6));
+    const el=tag("via event / callback",0xfbbf24);el.classList.add("hoptag");const t={el,pos:curve.getPoint(.5),hop:true};tags.push(t);open.tags.push(t)}}
+function ballAt(p,list){const m=new THREE.Mesh(new THREE.SphereGeometry(.28,16,12),new THREE.MeshBasicMaterial({color:0xfde68a,depthTest:false}));m.renderOrder=11;m.position.copy(p);scene.add(m);list.push(m)}
+
+// ---- selection + panel ----
+let sel=null,arcs=[];
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function highlight(mesh){if(sel)sel.material.emissive.setHex(0);sel=mesh;if(mesh)mesh.material.emissive.setHex(0x444444)}
+function clearArcs(){arcs.forEach(a=>scene.remove(a));arcs=[];metroTags.forEach(t=>{t.el.remove();tags.splice(tags.indexOf(t),1)});metroTags.length=0}
+function arc(a,b,color,r=0.06,top=color===0xfbbf24){const pa=new THREE.Vector3(a.x,a.y,a.z),pb=new THREE.Vector3(b.x,b.y,b.z),mid=pa.clone().lerp(pb,.5);mid.y=Math.max(pa.y,pb.y)+2+pa.distanceTo(pb)*0.25;
+  const t=new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(pa,mid,pb),40,r,6),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.85,depthTest:!top}));t.renderOrder=top?10:0;scene.add(t);arcs.push(t);return t}
+function crumb(parts){crumbs.innerHTML=parts.map((p,i)=>i<parts.length-1?`<a data-i="${i}">${esc(p[0])}</a>`:esc(p[0])).join(" › ");
+  crumbs.querySelectorAll("a").forEach(a=>a.onclick=()=>parts[a.dataset.i][1]())}
+function showCity(){stopFlow();closeBuilding();highlight(null);clearArcs();if(mode==="2d"){clear2DFlow();fit2D()}else if(mode==="3d")fly(CITY,CITYD,1.1);crumb([["City"]]);
+  panel.innerHTML=`<h2>${esc(D.repo)}</h2><div class="sub">${esc(D.app)}</div><ul class="list">${D.districts.map((d,i)=>`<li data-i="${i}"><b style="color:#${COLORS[i].toString(16)}">${esc(d.name)}</b><span>${esc(d.summary)} · ${(d.total??d.files.length).toLocaleString()} files</span></li>`).join("")}</ul>`;
+  panel.querySelectorAll("li").forEach(li=>li.onclick=()=>showDistrict(+li.dataset.i))}
+function showDistrict(i){stopFlow();closeBuilding();highlight(null);clearArcs();const d=D.districts[i];if(mode==="3d")fly(d.center,d.size*1.35);crumb([["City",showCity],[d.name]]);
+  panel.innerHTML=`<h2>${esc(d.name)}</h2><div class="sub">${esc(d.summary)}</div><ul class="list">${d.files.map(p=>`<li data-p="${p}"><b>${esc(short(p))}</b><span>${esc(byPath[p].summary)} · ${byPath[p].lines} lines</span></li>`).join("")}</ul>`;
+  panel.querySelectorAll("li").forEach(li=>li.onclick=()=>showFile(li.dataset.p))}
+function showFile(p,keepFlow){if(!keepFlow)stopFlow();const f=byPath[p],b=buildings[p],i=fileDistrict[p];highlight(null);clearArcs();
+  if(mode!=="3d"){const bx=two.boxes.find(x=>x.path===p);if(bx&&mode==="2d")view2D(fitCenter(new THREE.Vector3(bx.x,0,(bx.z0+bx.z1)/2),camH()),camH(),600)}
+  else if(f.cluster){closeBuilding();fly(new THREE.Vector3(b.x,b.H/2,b.z),Math.max(7,b.H*2.2),0.6)}else openBuilding(p);
+  crumb([["City",showCity],[D.districts[i].name,()=>showDistrict(i)],[short(p)]]);
+  panel.innerHTML=`<h2>${esc(short(p))}</h2><div class="sub">${esc(p)} · ${f.lines} lines</div><p>${esc(f.summary)}</p>
+   ${f.imports.length?`<div class="sub">Uses: ${f.imports.map(short).map(esc).join(", ")}</div>`:""}
+   ${f.cluster?`<ul class="list">${f.members.map(m=>`<li><b>${esc(short(m.path))}</b><span>${esc(m.summary||"")} · ${m.lines} lines</span></li>`).join("")}</ul>`:
+   `<ul class="list">${f.functions.map(fn=>`<li data-n="${esc(fn.name)}"><b>${esc(fn.name)}</b><span>line ${fn.line}</span></li>`).join("")}</ul>`}`;
+  if(!f.cluster)panel.querySelectorAll("li").forEach(li=>li.onclick=()=>showFn(p,li.dataset.n))}
+function showFn(p,name,extra=""){const m=floors[p][name]||Object.values(floors[p])[0],fn=m.userData.fn,i=fileDistrict[p],b=buildings[p];
+  highlight(m);const wp=new THREE.Vector3();m.getWorldPosition(wp);if(!flow.on&&mode==="3d")open.path===p?fly(new THREE.Vector3(b.x,wp.y,b.z),Math.min(open.L.T,14)+6,0.28,700):fly(wp,4.5,0.35);
+  crumb([["City",showCity],[D.districts[i].name,()=>showDistrict(i)],[short(p),()=>showFile(p)],[fn.name]]);
+  panel.innerHTML=`${extra}<h2>${esc(fn.name)}()</h2><div class="sub">${esc(p)}:${fn.line}</div>${fn.snippet?`<pre>${esc(fn.snippet)}</pre>`:""}${flow.on?"":reachHTML(p,fn.name)}`;
+  if(!flow.on)wireReach(p,fn.name);if(mode==="2d")mark2D(p,fn.name)}
+// ---- flows a function is part of (index built from the verified flows) ----
+const fnFlows={};D.flows.forEach((F,fi)=>F.steps.forEach((s,k)=>{const key=s.path+"::"+s.function;(fnFlows[key]??=[]);if(!fnFlows[key].some(x=>x.fi===fi))fnFlows[key].push({fi,k})}));
+const isoBtn=fi=>`<button class="isoLink" data-fi="${fi}">⧉ Isolate flow</button>`;
+const flowItem=(fi,note)=>{const F=D.flows[fi];return `<li class="flowitem" data-fi="${fi}"><b>▶ ${esc(F.title)}</b><span>${esc(note||F.desc)}</span>${isoBtn(fi)}</li>`};
+function fnFlowsHTML(p,name){const hits=fnFlows[p+"::"+name]||[];
+  if(!hits.length){const same=D.flows.map((F,fi)=>F.steps.some(s=>s.path===p)?fi:-1).filter(fi=>fi>=0);
+    return `<h4>Flows</h4><div class="sub">This function isn't part of any traced flow.${same.length?" These flows pass through the same file:":" No traced flow touches this file yet."}</div><ul class="list">${same.map(fi=>flowItem(fi)).join("")}</ul>`}
+  const top=hits.slice(0,2);
+  return `<h4>Flows this function is part of</h4><ul class="list" id="fnflows">${top.map(h=>flowItem(h.fi,`step ${h.k+1} of ${D.flows[h.fi].steps.length} · ${D.flows[h.fi].desc}`)).join("")}</ul>
+    <button class="ghost" id="showFlows">Show me the flows (${hits.length})</button>`}
+function wireFnFlows(p,name){const hits=fnFlows[p+"::"+name]||[],wire=()=>panel.querySelectorAll("li.flowitem").forEach(li=>li.onclick=()=>startFlow(+li.dataset.fi));wire();
+  const b=document.getElementById("showFlows");if(b)b.onclick=()=>{document.getElementById("fnflows").innerHTML=hits.map(h=>flowItem(h.fi,`step ${h.k+1} of ${D.flows[h.fi].steps.length} · ${D.flows[h.fi].desc}`)).join("");b.remove();wire()}}
+
+// ---- which user actions reach a function: reverse search over the call graph to the detected entry points.
+// <10% of actions: "Part of" (top 3 by hops); 10-40%: "Used by N actions" grouped by module; >40% or a known wrapper:
+// "Runs on almost every action" with its direct callers. "traced" = the step is in a verified walkthrough; "likely" = graph only.
+const M_ACT=D.actions.length,modName=d=>`<b style="color:${hx(COLORS[d])}">${esc(D.districts[d].name)}</b>`;
+const hopTxt=h=>h===0?"this is the entry point":`${h} hop${h===1?"":"s"} from the entry point`;
+function actItem(key,[ai,h,lab],ex){const a=D.actions[ai],xi=ex?.[ai];
+  const btn=lab==="traced"?isoBtn(a.flow):`<button class="ghost traceBtn" data-ai="${ai}"${xi!==undefined?` data-xi="${xi}"`:""}>Trace this</button>`;
+  return `<li class="${lab==="traced"?"flowitem":""}" ${lab==="traced"?`data-fi="${a.flow}"`:""}><b>${lab==="traced"?"▶ ":""}${esc(a.name)}<span class="chip ${lab}">${lab}</span></b><span>${hopTxt(h)}</span>${btn}</li>`}
+function reachHTML(p,name){const key=p+"::"+name,R=D.reach[key];
+  if(R&&R.b==="infra")return infraHTML(R);
+  if(!R||!R.n)return `<h4>User actions</h4><div class="note">${R?"👻 No user action reaches this (static analysis; may be used dynamically).":"Not analysed for user actions."} It may be test or dev code, or reached through a pattern the graph doesn't model.</div>`;
+  if(R.b==="part"){const rest=R.acts.length-3;return `<h4>Part of ${R.n} user action${R.n===1?"":"s"}</h4><ul class="list" id="reachList">${R.acts.slice(0,3).map(x=>actItem(key,x,R.ex)).join("")}</ul>${rest>0?`<button class="ghost" id="seeAll">See all (${R.acts.length})</button>`:""}`}
+  if(R.b==="used"){const mods=Object.entries(R.mods);return `<h4>Used by ${R.n} actions across ${mods.length} module${mods.length===1?"":"s"}</h4><ul class="mods">${mods.map(([d,xs])=>`<li>${modName(+d)} · ${xs.length}<br><span>${xs.map(([ai,h,lab])=>lab==="traced"?`<a data-fi="${D.actions[ai].flow}">${esc(D.actions[ai].name)}</a>`:esc(D.actions[ai].name)).join(", ")}</span></li>`).join("")}</ul><div class="note">Highlighted names are traced walkthroughs (click to play); the rest are likely, from the call graph.</div>`}
+}
+function infraHTML(R){const eg=R.eg;
+  return `<h4>Runs on almost every action${R.wrap?"":` (${R.n} of ${M_ACT})`}</h4><div class="note">${R.wrap?"A wrapper (error boundary, provider, context or logger) around the app, so every action passes through it.":"Shared infrastructure, so no single flow is listed."}${eg?` For example: ${esc(D.actions[eg[0]].name)} (${hopTxt(eg[1])}).`:""}</div>
+    ${Object.keys(R.callers).length?`<h4>Called directly by</h4>`:""}<ul class="mods">${Object.entries(R.callers).map(([d,ns])=>`<li>${modName(+d)}<br><span>${ns.map(n=>esc(n.startsWith("+")?n+" more":n+"()")).join(", ")}</span></li>`).join("")}</ul>`}
+function wireReach(p,name){const key=p+"::"+name,R=D.reach[key];
+  const wire=()=>{panel.querySelectorAll("li.flowitem").forEach(li=>li.onclick=()=>startFlow(+li.dataset.fi));panel.querySelectorAll(".mods a[data-fi]").forEach(a=>a.onclick=()=>startFlow(+a.dataset.fi));
+    panel.querySelectorAll(".traceBtn").forEach(b=>b.onclick=e=>{e.stopPropagation();if(b.dataset.xi!==undefined){startFlow(+b.dataset.xi);return}
+      b.outerHTML=`<div class="note">Would trace on demand: one AI pass over the files on this path, about $0.15, then every step checked against the source.</div>`})};wire();
+  const sa=document.getElementById("seeAll");if(sa)sa.onclick=()=>{document.getElementById("reachList").innerHTML=R.acts.map(x=>actItem(key,x,R.ex)).join("");sa.remove();wire()}}
+// ---- flow gallery ----
+function showGallery(){if(!flow.on)highlight(null);crumb([["City",showCity],["Flow gallery"]]);
+  const item=fi=>{const F=D.flows[fi],fs=[...new Set(F.steps.map(s=>short(s.path)))];
+    return `<li class="flowitem" data-fi="${fi}"><b>▶ ${esc(F.title)}</b><span>${esc(F.desc)}</span><span class="files">${F.steps.length} steps · ${fs.length} files: ${esc(fs.join(", "))}</span>${isoBtn(fi)}</li>`};
+  const g=D.flows.map((F,i)=>i).filter(i=>!D.flows[i].extra),x=D.flows.map((F,i)=>i).filter(i=>D.flows[i].extra);
+  panel.innerHTML=`<h2>Flow gallery</h2><div class="sub">${g.length} user actions traced through the code by AI, each step checked against the source. ${M_ACT} user actions detected in total.</div><ul class="list">${g.map(item).join("")}</ul>
+    ${x.length?`<h4>Traced on demand (examples)</h4><ul class="list">${x.map(item).join("")}</ul>`:""}`;
+  panel.querySelectorAll("li.flowitem").forEach(li=>li.onclick=()=>startFlow(+li.dataset.fi))}
+
+// ---- flow player: one step-addressable walkthrough engine for the 3D city, the 2D diagram and the isolated figure.
+// showStep(k) redraws the scene as "at step k" from scratch (path, stations, open building, camera), so jumping
+// backwards or forwards, in or out of a function dive, always lands in the same state as playing through ----
+const flow={on:false,fi:0};  // flow.on: a walkthrough is loaded in the player
+const P={fi:null,k:0,playing:false,ended:false,speed:1,loop:false,tok:0,run:0,h2:0};
+document.getElementById("galleryBtn").onclick=showGallery;
+const $=id=>document.getElementById(id),plBar=$("player"),plList=$("plList");
+function cityPoint(s){const m=(floors[s.path]||{})[s.function]||Object.values(floors[s.path])[0],b=buildings[s.path];return new THREE.Vector3(b.x,0.15+m.userData.y0,b.z)}
+const diveOf=F=>F.steps.map((s,k)=>F.steps[k-1]?.path===s.path||F.steps[k+1]?.path===s.path);
+const stepColor=s=>hx(COLORS[fileDistrict[s.path]??0]);
+function narrate(k){const F=D.flows[P.fi],s=F.steps[k],ind=s.link.startsWith("indirect"),inside=open.path===s.path?` · inside ${esc(short(s.path))}`:"";
+  showFn(s.path,s.function,`<div id="step">${esc(F.title)} · step ${k+1}/${F.steps.length}${inside}</div>${isoBtn(P.fi)}<div class="sub" style="color:var(--flow)">${k?(ind?"⇢ reached via event / callback / state change":"→ direct call"):"start"}</div><p style="font-size:15px">${esc(s.narration)}</p>`)}
+async function show3D(k,tok){const F=D.flows[P.fi],dive=diveOf(F),s=F.steps[k],live=()=>tok===P.tok;highlight(null);clearArcs();
+  // the city path up to k: an arc and a numbered station wherever the flow moves to another building
+  let cur=null;for(let j=0;j<=k;j++){const sj=F.steps[j],cp=cityPoint(sj);if(j===0||sj.path!==F.steps[j-1].path){if(j)metroArc(cityPoint(F.steps[j-1]),cp);cur=station(cp,j+1)||cur}if(!dive[j])ballAt(cp,arcs)}
+  metroTags.forEach(t=>t.el.classList.toggle("cur",t===cur));
+  if(dive[k]){if(open.path!==s.path){if(open.path){await closeBuilding();if(!live())return}await fly(cityPoint(s),16,.9,650);if(!live())return;await openBuilding(s.path);if(!live())return}
+    open.objs.forEach(o=>scene.remove(o));open.objs=[];for(const t of open.tags.filter(t=>t.hop)){t.el.remove();tags.splice(tags.indexOf(t),1);open.tags.splice(open.tags.indexOf(t),1)}
+    let a=k;while(a>0&&F.steps[a-1].path===s.path)a--;let pf=null;
+    for(let j=a;j<=k;j++){const fp=floorPoint(s.path,F.steps[j].function);if(pf)hop(pf,fp,F.steps[j].link.startsWith("indirect"));ballAt(fp,open.objs);pf=fp}
+    narrate(k);await fly(new THREE.Vector3(buildings[s.path].x,pf.y,buildings[s.path].z),Math.min(open.L.T,14)+6,0.28,750)}
+  else{if(open.path){await closeBuilding();if(!live())return}narrate(k);await fly(cityPoint(s),16,.9,850)}}
+function show2D(k){const F=D.flows[P.fi];if(two.fi!==P.fi){set2DFlow(P.fi);P.h2=0}
+  two.flowObjs.filter(o=>o.userData.stepBall).forEach(o=>scene.remove(o));two.flowObjs=two.flowObjs.filter(o=>!o.userData.stepBall);
+  for(let j=0;j<=k;j++){const n=two.nodes[F.steps[j].path+"::"+F.steps[j].function];ballAt(n.pos.clone().setY(0.6),two.flowObjs);two.flowObjs[two.flowObjs.length-1].userData.stepBall=true;if(j<k)two.flowObjs[two.flowObjs.length-1].scale.setScalar(0.6)}
+  const n=two.nodes[F.steps[k].path+"::"+F.steps[k].function];P.h2||=Math.min(camH(),fitH(CW*2.2,14));narrate(k);return view2D(fitCenter(n.pos,P.h2),P.h2,750)}
+function showIso(k){const svg=isoFig.querySelector("svg");if(!svg)return;svg.querySelector(".plcur")?.remove();const r=svg.querySelector(`.act[data-k="${k}"]`);if(!r)return;
+  const W=svg.viewBox.baseVal.width,y=+r.dataset.y,band=document.createElementNS("http://www.w3.org/2000/svg","rect");
+  Object.entries({class:"plcur",x:0,y:y-36,width:W,height:72,fill:"#fbbf24",opacity:iso.theme==="dark"?.1:.16}).forEach(([a,v])=>band.setAttribute(a,v));svg.querySelector(".rest").children[0].after(band)}
+async function showStep(k){if(P.fi===null)return;const N=D.flows[P.fi].steps.length;P.k=Math.max(0,Math.min(N-1,k));const tok=++P.tok;renderPlayer();
+  if(iso.fi===P.fi)return showIso(P.k);if(mode==="2d")return show2D(P.k);if(mode==="3d")return show3D(P.k,tok)}
+const sleep=(ms,run)=>new Promise(ok=>{const t0=performance.now(),f=()=>(!P.playing||run!==P.run||performance.now()-t0>=ms)?ok():setTimeout(f,50);f()});
+async function autoplay(){const run=++P.run;P.playing=true;P.ended=false;renderPlayer();
+  while(P.playing&&run===P.run){await showStep(P.k);if(!P.playing||run!==P.run)return;await sleep(3400/P.speed,run);if(!P.playing||run!==P.run)return;
+    if(P.k>=D.flows[P.fi].steps.length-1){if(P.loop){P.k=0;continue}P.playing=false;P.ended=true;renderPlayer();return}P.k++}}
+function play(){if(P.fi===null)return;if(P.ended||P.k>=D.flows[P.fi].steps.length-1&&!P.playing){if(P.k>=D.flows[P.fi].steps.length-1)P.k=0}autoplay()}
+function pause(){P.playing=false;P.run++;renderPlayer()}
+function gotoStep(k){if(P.fi===null)return;pause();P.ended=false;return showStep(k)}
+const next=()=>gotoStep(P.k+1),prev=()=>gotoStep(P.k-1);
+function openPlayer(fi){requestAnimationFrame(placePlayer);P.fi=fi;P.k=0;P.ended=false;flow.on=true;flow.fi=fi;lastFi=fi;plBar.hidden=false;const F=D.flows[fi];
+  $("plTitle").textContent=F.title;$("plTrack").innerHTML=F.steps.map((s,k)=>`<b data-k="${k}" style="background:${stepColor(s)}" title="${k+1}. ${esc(s.function)}()">${k+1}</b>`).join("");
+  plList.innerHTML=F.steps.map((s,k)=>`<li data-k="${k}"><i>${k+1}</i><b>${esc(s.function)}()<span class="bd${s.link.startsWith("indirect")?" ind":""}">${k?(s.link.startsWith("indirect")?"indirect":"direct"):"start"}</span></b><span>${esc(s.narration)}</span></li>`).join("");renderPlayer()}
+function stopFlow(){if(P.fi===null)return;pause();P.fi=null;flow.on=false;plBar.hidden=true;plList.hidden=true;$("plSteps").textContent="Steps ▾";clearArcs();two.flowObjs.filter(o=>o.userData.stepBall).forEach(o=>scene.remove(o))}
+function startFlow(fi){if(P.fi!==fi)openPlayer(fi);else{P.k=0;P.ended=false}play()}
+function renderPlayer(){if(P.fi===null)return;queueMicrotask(placePlayer);const F=D.flows[P.fi],s=F.steps[P.k],N=F.steps.length,end=P.k>=N-1&&!P.playing;
+  $("plPlay").textContent=P.playing?"⏸":end?"↻ Replay":"⏵";$("plLoop").classList.toggle("on",P.loop);
+  [...$("plTrack").children].forEach((b,k)=>{b.classList.toggle("cur",k===P.k);b.classList.toggle("done",k<P.k)});
+  $("plInfo").innerHTML=`Step ${P.k+1}/${N} · <code>${esc(s.function)}()</code> · ${esc(short(s.path))}:${s.line??""}${P.ended?" · finished: jump to any step or replay":""}`;
+  [...plList.children].forEach((li,k)=>li.classList.toggle("cur",k===P.k));if(!plList.hidden)plList.children[P.k]?.scrollIntoView({block:"nearest"})}
+$("plPlay").onclick=()=>P.playing?pause():play();$("plNext").onclick=next;$("plPrev").onclick=prev;$("plFirst").onclick=()=>gotoStep(0);$("plLast").onclick=()=>gotoStep(1e9);
+$("plSpeed").onchange=e=>{P.speed=+e.target.value};$("plLoop").onclick=()=>{P.loop=!P.loop;renderPlayer()};$("plClose").onclick=()=>{stopFlow();if(iso.fi===null)showGallery()};
+$("plSteps").onclick=()=>{plList.hidden=!plList.hidden;$("plSteps").textContent=plList.hidden?"Steps ▾":"Steps ▴";renderPlayer()};
+$("plTrack").onclick=e=>{const b=e.target.closest("b");if(b)gotoStep(+b.dataset.k)};plList.onclick=e=>{const li=e.target.closest("li");if(li)gotoStep(+li.dataset.k)};
+addEventListener("keydown",e=>{if(P.fi===null||e.metaKey||e.ctrlKey||e.altKey)return;const t=e.target;if(t.closest?.("input,textarea,select,[contenteditable]")||t.isContentEditable)return;
+  const k=e.key,N=D.flows[P.fi].steps.length;let used=true;if(k===" ")P.playing?pause():play();else if(k==="."||k==="n"||k==="N")next();else if(k===","||k==="p"||k==="P")prev();
+  else if(k==="Home")gotoStep(0);else if(k==="End")gotoStep(1e9);else if(/^[1-9]$/.test(k)&&+k<=N)gotoStep(+k-1);else used=false;
+  if(used){e.preventDefault();e.stopImmediatePropagation()}});
+// the player docks in the free bottom band between whatever sits at the bottom-left and bottom-right (Layers, add-on
+// controls, the info panel); when that band is too narrow (phones) it docks under the top bar instead
+function placePlayer(){const ar=app.getBoundingClientRect(),band=ar.bottom-140;let L=ar.left+12,R=ar.right-12;
+  for(const el of document.querySelectorAll("#app > *")){if(el===plBar||el===plList||el.hidden||!el.offsetParent&&getComputedStyle(el).position!=="fixed")continue;
+    const cs=getComputedStyle(el);if(cs.position!=="absolute"||cs.display==="none"||el.id==="iso"||el.classList.contains("tag")||el.id==="hover")continue;
+    const r=el.getBoundingClientRect();if(r.width<1||r.bottom<band||r.width>ar.width*0.6)continue;
+    if(r.left+r.width/2<ar.left+ar.width/2)L=Math.max(L,r.right+12);else R=Math.min(R,r.left-12)}
+  const narrow=R-L<440||ar.width<=700,s=plBar.style,ls=plList.style,dock=[$("layers"),...document.querySelectorAll('[data-dock="top"]')];
+  if(narrow){
+    // phones: one stack under the top bar: the Layers chip and any add-on panel marked data-dock="top" first (small),
+    // then the player and its steps list, which stops above the first panel or control lower on the screen
+    let y=$("bar").getBoundingClientRect().bottom-ar.top+6;const put=(el,st)=>Object.assign(el.style,{bottom:"auto",...st});
+    const lay=dock[0];put(lay,{top:y+"px"});let x=8,rowH=lay.offsetHeight;if(lay.open){y+=lay.offsetHeight+6;rowH=0}else x+=lay.offsetWidth+8;
+    dock.slice(1).forEach(el=>{if(el.hidden)return;put(el,{top:y+"px",left:x+"px",right:"auto"});x+=el.offsetWidth+8;rowH=Math.max(rowH,el.offsetHeight)});y+=rowH+6;
+    if(!plBar.hidden){put(plBar,{top:y+"px",left:"8px",right:"8px"});y+=plBar.offsetHeight+6;if(!plList.hidden){
+      let lim=ar.bottom;for(const el of document.querySelectorAll("#app > *")){if([plBar,plList,...dock].includes(el)||el.hidden||el.id==="bar"||el.id==="iso"||el.id==="hover"||el.classList.contains("tag"))continue;
+        const cs=getComputedStyle(el),r=el.getBoundingClientRect();if(cs.position==="absolute"&&cs.display!=="none"&&r.width>0&&r.top>ar.top+y)lim=Math.min(lim,r.top)}
+      // too little room under the player: the list opens as a bottom sheet over the info panel (it carries the same narration)
+      if(lim-ar.top-y<140)put(plList,{top:"auto",bottom:"8px",left:"8px",right:"8px",maxHeight:"42%"});
+      else{put(plList,{top:y+"px",left:"8px",right:"8px"});plList.style.maxHeight=(lim-plList.getBoundingClientRect().top-6)+"px"}}}}
+  else{dock.forEach(el=>Object.assign(el.style,{top:"",bottom:"",left:"",right:""}));plList.style.maxHeight="";
+    const lowest=Math.max(ar.top,...dock.slice(1).filter(el=>!el.hidden&&el.offsetParent).map(el=>el.getBoundingClientRect().bottom));dock[0].style.maxHeight=lowest>ar.top?(ar.bottom-lowest-24)+"px":"";
+    if(plBar.hidden)return;
+    Object.assign(s,{top:"auto",bottom:"12px",left:(L-ar.left)+"px",right:(ar.right-R)+"px"});Object.assign(ls,{top:"auto",bottom:(plBar.offsetHeight+20)+"px",left:(L-ar.left)+"px",right:(ar.right-R)+"px"})}}
+// re-place after other panels settle (an add-on may move its own controls when the info panel resizes)
+const replace=()=>requestAnimationFrame(()=>requestAnimationFrame(placePlayer));new ResizeObserver(replace).observe(app);new ResizeObserver(replace).observe($("panel"));setInterval(placePlayer,400);
+// app-shell hook: steps are 1-based like the on-screen "Step k/N"
+window.cityAPI=Object.assign(window.cityAPI||{},{flow:{play,pause,next,prev,goto:k=>gotoStep(k-1),
+  state:()=>P.fi===null?{open:false}:{open:true,flow:D.flows[P.fi].title,step:P.k+1,steps:D.flows[P.fi].steps.length,playing:P.playing,ended:P.ended,speed:P.speed,loop:P.loop,view:iso.fi!==null?"isolated":mode,building:open.path}}});
+document.getElementById("homeBtn").onclick=showCity;backBtn.onclick=showCity;addEventListener("keydown",e=>{if(e.key==="Escape"&&open.path)showCity()});
+
+
+// ---- 2D diagram: the city morphs into a flat chart: one column per module (district), files as boxes,
+// the functions the flows touch as nodes, and flow edges (solid = direct call, dashed = event/callback) ----
+let mode="3d",lastFi=0;
+const two={nodes:{},list:[],boxes:[],heads:[],objs:[],flowObjs:[],flowTags:[],baseTags:[],fi:null,c:new THREE.Vector3(),w:0,h:0};
+const modeBtn=document.getElementById("modeBtn"),hoverEl=document.getElementById("hover"),CW=11,NW=CW*0.74;
+(function layout2D(){const cols=D.districts.map(()=>[]),seen=new Set();
+  D.flows.forEach(F=>F.steps.forEach(s=>{const key=s.path+"::"+s.function;if(seen.has(key))return;seen.add(key);
+    const c=cols[fileDistrict[s.path]];let g=c.find(g=>g.path===s.path);if(!g)c.push(g={path:s.path,fns:[]});g.fns.push(s.function)}));
+  const act=cols.map((c,i)=>c.length?i:-1).filter(i=>i>=0),RH=1.8,gh=g=>1.5+g.fns.length*RH+0.8;
+  const T=act.reduce((a,di)=>a+cols[di].reduce((b,g)=>b+gh(g),0),0),nc=Math.max(act.length,Math.round(Math.sqrt(1.4*T/CW)));
+  const colH=Math.max(...act.flatMap(di=>cols[di].map(gh)),T/nc*1.08);let ci=0,maxZ=0;
+  act.forEach(di=>{let z=0;two.heads.push({di,ci});
+    cols[di].forEach(g=>{if(z>0&&z+gh(g)>colH){ci++;z=0}const z0=z;z+=1.5;
+      g.fns.forEach(n=>{const nd={key:g.path+"::"+n,path:g.path,name:n,di,ci,pos:new THREE.Vector3(0,0.32,z)};two.nodes[nd.key]=nd;two.list.push(nd);z+=RH});
+      two.boxes.push({path:g.path,di,ci,z0:z0+0.2,z1:z-0.5});z+=0.8;maxZ=Math.max(maxZ,z)});ci++});
+  const X=c=>(c-(ci-1)/2)*CW,shift=maxZ/2;
+  two.list.forEach(n=>{n.pos.x=X(n.ci);n.pos.z-=shift});two.boxes.forEach(b=>{b.x=X(b.ci);b.z0-=shift;b.z1-=shift});
+  two.heads.forEach(h=>h.pos=new THREE.Vector3(X(h.ci),0.3,-shift-1.2));
+  two.w=ci*CW;two.h=maxZ+2;
+  // meshes exist from the start but stay hidden until the morph
+  two.list.forEach(n=>{const m=new THREE.Mesh(new THREE.BoxGeometry(NW,0.12,0.95),new THREE.MeshStandardMaterial({color:new THREE.Color(COLORS[n.di]).multiplyScalar(0.55),roughness:.6,transparent:true,opacity:0,emissive:0x000000}));
+    m.visible=false;m.userData={kind:"node",key:n.key};n.mesh=m;scene.add(m)});
+  two.boxes.forEach(b=>{const h=b.z1-b.z0,m=new THREE.Mesh(new THREE.BoxGeometry(CW*0.9,0.04,h),new THREE.MeshBasicMaterial({color:0x1a2133,transparent:true,opacity:0}));
+    m.position.set(b.x,0.08,(b.z0+b.z1)/2);m.visible=false;b.mesh=m;scene.add(m)})})();
+const nodeMeshes=two.list.map(n=>n.mesh);
+// the hop curve between two nodes: same column bulges out to the right, across columns links facing edges
+function hop2D(a,b){const pa=a.pos.clone(),pb=b.pos.clone();pa.y=pb.y=0.45;
+  if(Math.abs(pa.x-pb.x)<0.1){pa.x+=NW/2;pb.x+=NW/2;const mid=pa.clone().lerp(pb,.5);mid.x+=1.2+Math.abs(pa.z-pb.z)*0.12;return new THREE.QuadraticBezierCurve3(pa,mid,pb)}
+  const dir=Math.sign(pb.x-pa.x);pa.x+=dir*NW/2;pb.x-=dir*NW/2;const mid=pa.clone().lerp(pb,.5);mid.z+=(pb.x-pa.x)*0.08;return new THREE.QuadraticBezierCurve3(pa,mid,pb)}
+function tag2D(text,pos,cls,color=0xe8ecf5,list=two.baseTags){const el=tag(text,color);el.classList.add(cls);const t={el,pos};tags.push(t);list.push(t);return t}
+function dropTags(list){list.forEach(t=>{t.el.remove();tags.splice(tags.indexOf(t),1)});list.length=0}
+function baseEdges(){D.flows.forEach(F=>F.steps.forEach((s,k)=>{if(!k)return;const a=two.nodes[F.steps[k-1].path+"::"+F.steps[k-1].function],b=two.nodes[s.path+"::"+s.function];if(a===b)return;
+  const ind=s.link.startsWith("indirect"),g=new THREE.BufferGeometry().setFromPoints(hop2D(a,b).getPoints(24)),
+  l=new THREE.Line(g,ind?new THREE.LineDashedMaterial({color:0x8b93a7,dashSize:.35,gapSize:.3,transparent:true,opacity:.35}):new THREE.LineBasicMaterial({color:0x8b93a7,transparent:true,opacity:.35}));
+  if(ind)l.computeLineDistances();scene.add(l);two.objs.push(l)}))}
+function clear2DFlow(){two.flowObjs.forEach(o=>scene.remove(o));two.flowObjs=[];dropTags(two.flowTags);
+  two.list.forEach(n=>{n.mesh.material.color.set(new THREE.Color(COLORS[n.di]).multiplyScalar(0.55));n.mesh.material.emissive.setHex(0)});two.fi=null;labels2D()}
+// highlight one flow: amber nodes, numbered labels, thick path (dashed where the hop is indirect)
+function set2DFlow(fi){clear2DFlow();two.fi=fi;lastFi=fi;const F=D.flows[fi],nums={};
+  F.steps.forEach((s,k)=>{const key=s.path+"::"+s.function;(nums[key]??=[]).push(k+1);if(!k)return;const a=two.nodes[F.steps[k-1].path+"::"+F.steps[k-1].function],b=two.nodes[key];if(a===b)return;
+    const curve=hop2D(a,b),mat=new THREE.MeshBasicMaterial({color:0xfbbf24,depthTest:false}),add=g=>{const t=new THREE.Mesh(g,mat);t.renderOrder=10;scene.add(t);two.flowObjs.push(t)};
+    if(!s.link.startsWith("indirect"))add(new THREE.TubeGeometry(curve,32,.09,6));
+    else for(let j=0;j<14;j+=2)add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([curve.getPoint(j/14),curve.getPoint((j+.5)/14),curve.getPoint((j+1)/14)]),4,.08,6))});
+  Object.entries(nums).forEach(([key,ks])=>{const n=two.nodes[key];n.mesh.material.color.setHex(0x7a5a10);n.mesh.material.emissive.setHex(0x3a2a00);
+    tag2D(`${ks.join(", ")} · ${n.name}()`,n.pos,"ntag",0xfbbf24,two.flowTags).el.classList.add("hot")});labels2D()}
+// at most ~12 node labels: the highlighted flow's nodes, or else the functions most flows share
+function labels2D(){dropTags(two.baseTags);if(mode!=="2d")return;
+  two.heads.forEach(h=>tag2D(D.districts[h.di].name,h.pos,"dtag",COLORS[h.di]));
+  two.boxes.forEach(b=>tag2D(short(b.path),new THREE.Vector3(b.x-CW*0.43,0.3,b.z0+0.45),"ftag2",0x8b93a7));
+  if(two.fi!==null)return;
+  two.list.map(n=>[n,(fnFlows[n.key]||[]).length]).sort((a,b)=>b[1]-a[1]).slice(0,12).forEach(([n])=>tag2D(n.name+"()",n.pos,"ntag"))}
+function view2D(target,height,dur=900){if(anim)anim.ok();let ok;const pr=new Promise(r=>ok=r);
+  anim={t0:performance.now(),dur,ok,fromP:camera.position.clone(),fromT:controls.target.clone(),toT:target.clone(),toP:target.clone().add(new THREE.Vector3(0,height,0.01))};return pr}
+const FOV2=22,tanH=()=>Math.tan(THREE.MathUtils.degToRad(FOV2/2));
+// height that fits a w×h area, leaving room for the side panel on wide screens
+function fitH(w,h){const a=camera.aspect,pw=app.clientWidth>700?(app.clientWidth-380)/app.clientWidth:1;return Math.max(h/2,w/2/(a*pw))*1.12/tanH()}
+function fitCenter(c,height){const v=c.clone();if(app.clientWidth>700)v.x+=height*tanH()*camera.aspect*(380/app.clientWidth);return v}
+function fit2D(F){if(!F){const H=fitH(two.w,two.h);return view2D(fitCenter(two.c,H),H)}
+  const ps=F.steps.map(s=>two.nodes[s.path+"::"+s.function].pos),x0=Math.min(...ps.map(p=>p.x))-CW/2,x1=Math.max(...ps.map(p=>p.x))+CW/2,z0=Math.min(...ps.map(p=>p.z))-2,z1=Math.max(...ps.map(p=>p.z))+2;
+  const H=fitH(x1-x0,z1-z0);return view2D(fitCenter(new THREE.Vector3((x0+x1)/2,0,(z0+z1)/2),H),H)}
+const camH=()=>camera.position.y-controls.target.y;
+function mark2D(p,name){const n=two.nodes[p+"::"+name];two.list.forEach(x=>{if(x.mesh.material.emissive.getHex()===0x555555)x.mesh.material.emissive.setHex(0)});if(!n)return;
+  if(n.mesh.material.emissive.getHex()===0)n.mesh.material.emissive.setHex(0x555555);if(!flow.on)view2D(fitCenter(n.pos,camH()),camH(),600)}
+const allFloors=()=>cityGroups.flatMap(g=>g.children),plates=pickables.filter(m=>m.userData.kind==="district");
+const mats=m=>Array.isArray(m.material)?m.material:[m.material];
+let fogSaved=null;
+async function to2D(){if(mode!=="3d")return;controls.enableDamping=false;pause();highlight(null);clearArcs();await closeBuilding();mode="morph";modeBtn.textContent="3D city";modeBtn.classList.add("on");
+  const fl=allFloors(),pl=plates.flatMap(mats);[...fl.flatMap(mats),...pl].forEach(m=>{m.transparent=true;m.depthWrite=false;m.needsUpdate=true});
+  const start=two.list.map(n=>{const v=new THREE.Vector3();(floors[n.path][n.name]||Object.values(floors[n.path])[0]).getWorldPosition(v);return v});
+  two.list.forEach((n,i)=>{n.mesh.visible=true;n.mesh.position.copy(start[i]);n.mesh.scale.set(0.25,1,1)});two.boxes.forEach(b=>b.mesh.visible=true);
+  fogSaved=scene.fog;scene.fog=null;controls.maxDistance=Infinity;const H=fitH(two.w,two.h),fov0=camera.fov;
+  view2D(fitCenter(two.c,H),H,1200);
+  await tween(1200,e=>{const a=Math.min(1,e/0.6),b=Math.max(0,(e-0.25)/0.75);
+    cityGroups.forEach(g=>g.scale.y=1-0.96*a);fl.forEach(m=>m.material.opacity=1-a);pl.forEach(m=>m.opacity=1-0.92*a);
+    two.list.forEach((n,i)=>{n.mesh.position.lerpVectors(start[i],n.pos,b);n.mesh.scale.x=0.25+0.75*b;n.mesh.material.opacity=Math.min(1,b*1.6)});
+    two.boxes.forEach(x=>x.mesh.material.opacity=0.85*b);camera.fov=fov0+(FOV2-fov0)*e;camera.updateProjectionMatrix()});
+  cityGroups.forEach(g=>g.visible=false);baseEdges();mode="2d";controls.enableRotate=false;controls.enableDamping=false;controls.autoRotate=false;controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};controls.maxDistance=Infinity;
+  set2DFlow(P.fi??lastFi);crumb([["City",showCity],["2D diagram"]]);P.fi!==null?showStep(P.k):showGallery()}
+async function to3D(){if(mode!=="2d")return;hoverEl.style.display="none";pause();clear2DFlow();dropTags(two.baseTags);two.objs.forEach(o=>scene.remove(o));two.objs=[];mode="morph";modeBtn.textContent="2D diagram";modeBtn.classList.remove("on");
+  const fl=allFloors(),pl=plates.flatMap(mats),end=two.list.map(n=>{const v=new THREE.Vector3();(floors[n.path][n.name]||Object.values(floors[n.path])[0]).getWorldPosition(v);return v}),fov0=camera.fov;
+  cityGroups.forEach(g=>g.visible=true);controls.enableRotate=true;controls.enableDamping=true;controls.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};controls.maxDistance=EXT*2.2;
+  fly(CITY,CITYD,1.1,1200);
+  await tween(1200,e=>{const a=Math.max(0,(e-0.4)/0.6),b=Math.min(1,e/0.75);
+    cityGroups.forEach(g=>g.scale.y=0.04+0.96*a);fl.forEach(m=>m.material.opacity=a);pl.forEach(m=>m.opacity=0.08+0.92*a);
+    two.list.forEach((n,i)=>{n.mesh.position.lerpVectors(n.pos,end[i].clone().setY(end[i].y*0.04+0.15+(end[i].y-0.15)*0.96*a),b);n.mesh.material.opacity=1-b});
+    two.boxes.forEach(x=>x.mesh.material.opacity=0.85*(1-b));camera.fov=fov0+(40-fov0)*e;camera.updateProjectionMatrix()});
+  two.list.forEach(n=>n.mesh.visible=false);two.boxes.forEach(b=>b.mesh.visible=false);
+  [...fl.flatMap(mats),...pl].forEach(m=>{m.transparent=false;m.depthWrite=true;m.opacity=1;m.needsUpdate=true});scene.fog=fogSaved;mode="3d";P.fi!==null?showStep(P.k):showCity()}
+modeBtn.onclick=()=>mode==="3d"?to2D():mode==="2d"?to3D():null;
+
+
+// ---- isolated flow: one flow as a doc figure (sequence-diagram style: lanes = files grouped by module, numbered steps,
+// solid = direct call, dashed = via event / callback, one narration line per step), exportable as PNG / Mermaid / link ----
+const isoEl=document.getElementById("iso"),isoFig=document.getElementById("isoFig"),isoBg=document.getElementById("isoBg"),isoModal=document.getElementById("isoModal"),isoCard=document.getElementById("isoCard"),isoSt=document.getElementById("isoSt");
+const iso={fi:null,theme:"dark",busy:false};
+const words=t=>t.toLowerCase().match(/[a-z0-9]+/g);
+// short ids for #flow-<id> links: the first word of the title, or the whole title when that word repeats
+const FLOWID=(()=>{const f=D.flows.map(F=>words(F.title)[0]);return D.flows.map((F,i)=>f.filter(x=>x===f[i]).length>1?words(F.title).join("-"):f[i])})();
+const shade=(n,k)=>"#"+new THREE.Color(n).multiplyScalar(k).getHexString(),hx=n=>"#"+n.toString(16).padStart(6,"0");
+const THEMES={dark:{bg:"#0a0d16",ink:"#e8ecf5",mute:"#8b93a7",line:"#2a3348",arrow:"#cbd5e1",badge:"#fbbf24",badgeInk:"#1a1300",card:"#121726",mod:n=>hx(n)},
+  light:{bg:"#ffffff",ink:"#111827",mute:"#6b7280",line:"#d7dbe3",arrow:"#374151",badge:"#111827",badgeInk:"#ffffff",card:"#f5f6f8",mod:n=>shade(n,0.6)}};
+const xesc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])),trunc=(t,n)=>t.length>n?t.slice(0,n-1)+"…":t;
+function wrapWords(t,max){const out=[];let l="";for(const w of t.split(/\s+/)){if(l&&(l+" "+w).length>max){out.push(l);l=w}else l=l?l+" "+w:w}if(l)out.push(l);return out}
+function lanesOf(F){const order=[];F.steps.forEach(s=>{if(!order.includes(s.path))order.push(s.path)});const mods=[];order.forEach(p=>{if(!mods.includes(fileDistrict[p]))mods.push(fileDistrict[p])});
+  return {mods,lanes:mods.flatMap(d=>order.filter(p=>fileDistrict[p]===d))}}
+function figure(fi,th){const F=D.flows[fi],T=THEMES[th],{mods,lanes}=lanesOf(F),N=F.steps.length;
+  const LW=150,X0=36,NX=X0+lanes.length*LW+28,NWID=540,W=NX+NWID+36,HEAD=158,RH=76,H=HEAD+N*RH+28,FONT="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
+  const lx=p=>X0+lanes.indexOf(p)*LW+LW/2,ry=k=>HEAD+k*RH+RH/2,col=p=>T.mod(COLORS[fileDistrict[p]]);
+  let rest="",acts="";
+  rest+=`<rect width="${W}" height="${H}" fill="${T.bg}"/>`;
+  rest+=`<text x="${X0}" y="44" font-size="24" font-weight="700" fill="${T.ink}">${xesc(F.title)}</text>`;
+  rest+=`<text x="${X0}" y="68" font-size="13" fill="${T.mute}">${xesc(D.repo)} · ${xesc(F.desc)} · ${N} steps, each checked against the source</text>`;
+  // module groups over their lanes
+  mods.forEach(d=>{const ls=lanes.filter(p=>fileDistrict[p]===d),a=lx(ls[0])-LW/2+8,b=lx(ls[ls.length-1])+LW/2-8,c=T.mod(COLORS[d]);
+    rest+=`<text x="${(a+b)/2}" y="98" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="1" fill="${c}">${xesc(D.districts[d].name.toUpperCase())}</text><line x1="${a}" y1="106" x2="${b}" y2="106" stroke="${c}" stroke-width="2"/>`});
+  lanes.forEach(p=>{const x=lx(p);rest+=`<line x1="${x}" y1="142" x2="${x}" y2="${H-20}" stroke="${T.line}" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <rect x="${x-64}" y="114" width="128" height="28" rx="7" fill="${T.card}" stroke="${col(p)}" stroke-width="1.5"/><text x="${x}" y="132" text-anchor="middle" font-size="12" font-weight="600" fill="${T.ink}">${xesc(trunc(short(p),19))}</text>`});
+  rest+=`<text x="${NX}" y="132" font-size="11" font-weight="700" letter-spacing="1" fill="${T.mute}">WHAT HAPPENS</text>`;
+  const badge=(x,y,k)=>`<circle cx="${x}" cy="${y}" r="10" fill="${T.badge}"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="700" fill="${T.badgeInk}">${k}</text>`;
+  F.steps.forEach((s,k)=>{const x=lx(s.path),y=ry(k),ind=s.link.startsWith("indirect");
+    rest+=`<line x1="${x+10}" y1="${y}" x2="${NX-10}" y2="${y}" stroke="${T.line}" stroke-width="1" stroke-dasharray="1 5" opacity=".9"/>`;
+    if(k){const px=lx(F.steps[k-1].path),dash=ind?` stroke-dasharray="6 4"`:"";
+      if(px===x)rest+=`<path d="M${x+7} ${y-24} h26 v18 h-20" fill="none" stroke="${T.arrow}" stroke-width="1.6"${dash} marker-end="url(#ah)"/>`+badge(x+45,y-15,k+1);
+      else{const d=Math.sign(x-px),x1=px+d*7,x2=x-d*7;rest+=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${T.arrow}" stroke-width="1.6"${dash} marker-end="url(#ah)"/>`+badge((x1+x2)/2,y,k+1)}}
+    else rest+=badge(x-26,y,1);
+    // narration column: number + function, file:line, then up to 3 wrapped lines
+    const head=`${k+1}. ${s.function}()`,loc=trunc(`${short(s.path)}:${s.line??""}`,Math.max(8,74-head.length));
+    rest+=`<text x="${NX}" y="${y-16}" font-size="13.5" font-weight="700" fill="${T.ink}">${xesc(head)}<tspan font-weight="400" font-size="12" fill="${T.mute}">   ${xesc(loc)}</tspan></text>`;
+    const pre=ind?"via event / callback — ":"",ls=wrapWords(pre+s.narration,80).slice(0,3);
+    ls.forEach((l,j)=>{const txt=j===2&&wrapWords(pre+s.narration,80).length>3?trunc(l,79)+"…":l;
+      rest+=j===0&&ind?`<text x="${NX}" y="${y+3+j*16}" font-size="12.5" fill="${T.ink}"><tspan font-style="italic" fill="${T.mute}">${xesc(pre)}</tspan>${xesc(txt.slice(pre.length))}</text>`
+        :`<text x="${NX}" y="${y+3+j*16}" font-size="12.5" fill="${T.ink}">${xesc(txt)}</text>`});
+    acts+=`<rect class="act" data-k="${k}" data-x="${x}" data-y="${y}" x="${x-6}" y="${y-12}" width="12" height="24" rx="3" fill="${col(s.path)}"/>`});
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="${FONT}"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${T.arrow}"/></marker></defs><g class="rest">${rest}</g><g class="acts">${acts}</g></svg>`;
+  return {svg,W,H}}
+function mermaidOf(fi){const F=D.flows[fi],{lanes}=lanesOf(F),id=p=>"F"+lanes.indexOf(p),clean=t=>String(t).replace(/[;#:%{}]/g," ").replace(/\s+/g," ").trim();
+  const L=["---",`title: ${clean(F.title)} (${clean(D.repo)})`,"---","sequenceDiagram",...lanes.map(p=>`    participant ${id(p)} as ${clean(short(p))}`)];
+  F.steps.forEach((s,k)=>{const fn=clean(s.function)+"()";if(!k){L.push(`    Note over ${id(s.path)}: 1. ${fn}`);return}
+    const ind=s.link.startsWith("indirect");L.push(`    ${id(F.steps[k-1].path)}${ind?"-->>":"->>"}${id(s.path)}: ${k+1}. ${fn}${ind?" via event or callback":""}`)});
+  return L.join("\n")}
+function renderIso(){const {svg}=figure(iso.fi,iso.theme);isoFig.innerHTML=svg;const el=isoFig.querySelector("svg");el.removeAttribute("width");el.removeAttribute("height");
+  const T=THEMES[iso.theme];isoBg.style.background=T.bg;document.getElementById("isoTheme").textContent=iso.theme==="dark"?"Light background":"Dark background";return el}
+// where a step currently sits on screen (3D floor, or 2D node), as the starting point of its glide
+function stepWorld(s){const key=s.path+"::"+s.function,v=new THREE.Vector3();if(mode==="2d"&&two.nodes[key])return two.nodes[key].pos.clone();
+  const m=(floors[s.path]||{})[s.function];if(m&&m.parent.visible){m.getWorldPosition(v);return v}const b=buildings[s.path];return v.set(b.x,1,b.z)}
+async function isolate(fi,instant){if(iso.busy)return;iso.busy=true;pause();if(P.fi!==fi)openPlayer(fi);iso.fi=fi;isoSt.textContent="";isoEl.hidden=false;app.classList.add("isolated");
+  const el=renderIso(),acts=[...el.querySelectorAll(".act")],rest=el.querySelector(".rest");
+  showIso(P.k);
+  if(instant){renderer.domElement.style.opacity=0;isoBg.style.opacity=1;iso.busy=false;return}
+  const ctm=el.getScreenCTM().inverse(),ar=app.getBoundingClientRect(),F=D.flows[fi];
+  const from=acts.map(r=>{const v=stepWorld(F.steps[+r.dataset.k]).project(camera),pt=new DOMPoint(ar.left+(v.x+1)/2*ar.width,ar.top+(1-v.y)/2*ar.height).matrixTransform(ctm);return [pt.x-r.dataset.x,pt.y-r.dataset.y]});
+  rest.style.opacity=0;isoBg.style.opacity=0;
+  await tween(800,e=>{renderer.domElement.style.opacity=1-e;isoBg.style.opacity=e;acts.forEach((r,i)=>r.setAttribute("transform",`translate(${from[i][0]*(1-e)} ${from[i][1]*(1-e)})`));rest.style.opacity=Math.max(0,(e-0.3)/0.7)});
+  iso.busy=false}
+async function unisolate(){if(iso.busy||iso.fi===null)return;iso.busy=true;const el=isoFig.querySelector("svg"),rest=el.querySelector(".rest");
+  await tween(700,e=>{renderer.domElement.style.opacity=e;isoBg.style.opacity=1-e;rest.style.opacity=1-e;el.querySelector(".acts").style.opacity=1-e});
+  isoEl.hidden=true;app.classList.remove("isolated");renderer.domElement.style.opacity="";iso.fi=null;iso.busy=false;
+  if(location.hash.startsWith("#flow-"))try{history.replaceState(null,"",location.pathname+location.search)}catch{}
+  P.fi!==null?showStep(P.k):showGallery()}
+// exports: a modal always shows what was produced, because the viewer's sandbox may refuse clipboard writes and downloads
+function modal(html){isoCard.innerHTML=html+`<div class="row"><button id="mClose">Close</button><span class="st" id="mSt" style="font-size:12px;color:var(--mute)"></span></div>`;isoModal.hidden=false;
+  document.getElementById("mClose").onclick=()=>{isoModal.hidden=true;isoCard.querySelectorAll("img").forEach(i=>URL.revokeObjectURL(i.src))}}
+async function figurePNG(){const {svg,W,H}=figure(iso.fi,iso.theme),url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"})),img=new Image();
+  await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=url});const c=document.createElement("canvas");c.width=W*2;c.height=H*2;const g=c.getContext("2d");g.scale(2,2);g.drawImage(img,0,0,W,H);URL.revokeObjectURL(url);
+  return new Promise(ok=>c.toBlob(ok,"image/png"))}
+document.getElementById("isoBack").onclick=unisolate;
+document.getElementById("isoTheme").onclick=()=>{iso.theme=iso.theme==="dark"?"light":"dark";renderIso();showIso(P.k)};
+document.getElementById("isoMermaid").onclick=()=>{const text=mermaidOf(iso.fi);
+  modal(`<h2>Mermaid sequence diagram</h2><textarea id="mText" rows="16" readonly>${xesc(text)}</textarea>`);const ta=document.getElementById("mText"),st=document.getElementById("mSt");
+  navigator.clipboard.writeText(text).then(()=>{st.textContent="Copied to the clipboard.";isoSt.textContent="Mermaid copied"},()=>{ta.focus();ta.select();st.textContent="Copying isn't allowed here: the text is selected, press Ctrl/Cmd+C."})};
+document.getElementById("isoPng").onclick=async()=>{isoSt.textContent="Rendering…";const blob=await figurePNG(),url=URL.createObjectURL(blob),name=`flow-${FLOWID[iso.fi]}.png`;isoSt.textContent="";
+  modal(`<h2>${xesc(D.flows[iso.fi].title)} · PNG (2×)</h2><img id="mImg" src="${url}" alt="Flow diagram"><div class="sub">Right-click → Save image (or Copy image), or use the buttons.</div>
+   <div class="row"><button id="mCopyImg" class="primary">Copy image</button><a href="${url}" download="${name}">Download ${name}</a></div>`);
+  document.getElementById("mCopyImg").onclick=()=>{const st=document.getElementById("mSt");
+    try{navigator.clipboard.write([new ClipboardItem({"image/png":blob})]).then(()=>st.textContent="Image copied.",()=>st.textContent="Copying images isn't allowed here: right-click the image instead.")}catch{st.textContent="Copying images isn't allowed here: right-click the image instead."}}};
+document.getElementById("isoLinkBtn").onclick=()=>{const link=location.href.split("#")[0]+"#flow-"+FLOWID[iso.fi];
+  modal(`<h2>Link to this flow</h2><input id="mLink" readonly value="${xesc(link)}">`);const inp=document.getElementById("mLink"),st=document.getElementById("mSt");
+  navigator.clipboard.writeText(link).then(()=>st.textContent="Link copied.",()=>{inp.focus();inp.select();st.textContent="Copying isn't allowed here: the link is selected, press Ctrl/Cmd+C."})};
+// isolate buttons anywhere in the panel win over the item's own click (capture phase)
+panel.addEventListener("click",e=>{const b=e.target.closest(".isoLink");if(!b)return;e.stopPropagation();isolate(+b.dataset.fi)},true);
+function openHash(){const m=location.hash.match(/^#flow-([\w-]+)$/),fi=m?FLOWID.indexOf(m[1]):-1;if(fi>=0&&iso.fi!==fi){iso.busy=false;isolate(fi,true)}}
+addEventListener("hashchange",openHash);
+
+// ---- The Daily Commit: the city's tabloid. Facts are computed at build time from the source; only the wit is AI-written ----
+{const paperEl=$("paper"),body=$("paperBody"),T=D.tabloid||[];$("paperBtn").hidden=!T.length;
+  $("paperEarL").textContent=D.meta?`${D.meta.repo} @ ${D.meta.sha}`:D.repo;$("paperDate").textContent=`The ${D.repo} edition · ${T.length} stories from the code city`;
+  body.innerHTML=T.map((t,i)=>`<section class="${i?"":"lead"}"><h2>${esc(t.headline)}</h2><p>${esc(t.deck)}</p>${t.scene?.path?`<button data-i="${i}">Visit the scene →</button>`:""}</section>`).join("");
+  const close=()=>{paperEl.hidden=true;$("paperBtn").focus()};
+  $("paperBtn").onclick=()=>{paperEl.hidden=false;$("paperClose").focus()};$("paperClose").onclick=close;
+  paperEl.addEventListener("click",e=>{if(e.target===paperEl)close()});
+  addEventListener("keydown",e=>{if(e.key==="Escape"&&!paperEl.hidden){e.preventDefault();e.stopImmediatePropagation();close()}},true);
+  // fly to the building (and function) where the story happened
+  body.addEventListener("click",async e=>{const b=e.target.closest("button[data-i]");if(!b)return;const sc=T[+b.dataset.i].scene;paperEl.hidden=true;
+    if(iso.fi!==null)await unisolate();if(mode==="2d")await to3D();if(!buildings[sc.path])return;showFile(sc.path);
+    if(sc.fn&&!byPath[sc.path].cluster)setTimeout(()=>showFn(sc.path,sc.fn),900)})}
+
+// ---- picking ----
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let down=null;
+renderer.domElement.addEventListener("pointerdown",e=>down=[e.clientX,e.clientY]);
+renderer.domElement.addEventListener("pointermove",e=>{if(mode!=="2d"){hoverEl.style.display="none";return}const r=renderer.domElement.getBoundingClientRect();
+  mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);const h=ray.intersectObjects(nodeMeshes,false)[0];
+  if(!h){hoverEl.style.display="none";renderer.domElement.style.cursor="";return}const n=two.nodes[h.object.userData.key],fl=(fnFlows[n.key]||[]).length;
+  hoverEl.textContent=`${n.name}() · ${short(n.path)} · in ${fl} flow${fl===1?"":"s"}`;hoverEl.style.display="block";hoverEl.style.left=(e.clientX-r.left)+"px";hoverEl.style.top=(e.clientY-r.top)+"px";renderer.domElement.style.cursor="pointer"});
+renderer.domElement.addEventListener("pointerup",e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;
+  const r=renderer.domElement.getBoundingClientRect();mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);
+  if(mode==="2d"){const h=ray.intersectObjects(nodeMeshes,false)[0];if(h){const n=two.nodes[h.object.userData.key];stopFlow();showFn(n.path,n.name)}return}if(mode!=="3d")return;
+  const hit=ray.intersectObjects(pickables,false)[0];if(!hit)return showCity();const u=hit.object.userData;
+  if(u.kind==="district")return showDistrict(u.i);
+  // first click on a building opens the file; a click on an already-open file selects the floor (function)
+  if(open.path===u.path||crumbs.textContent.endsWith(short(u.path))||crumbs.textContent.includes(short(u.path)+" ›"))showFn(u.path,u.fn.name);else showFile(u.path)});
+
+// ---- render loop ----
+function resize(){const w=app.clientWidth,h=app.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(app);resize();
+camera.position.set(EXT*.5,EXT*.9,EXT);showCity();openHash();
+const v=new THREE.Vector3();
+renderer.setAnimationLoop(now=>{stepTweens(now);
+  // while a flow is isolated the city is hidden under the figure: skip its rendering so exports and the figure stay responsive
+  if(iso.fi!==null&&!iso.busy)return;
+  stepAnim(now);controls.update();const close=updateLayers(now);renderer.render(scene,camera);
+  const w=app.clientWidth,h=app.clientHeight;
+  if(mode!=="3d"){const ppu=h/(2*Math.max(1e-3,camH())*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));app.style.setProperty("--pill",Math.max(24,NW*ppu)+"px");app.style.setProperty("--box",Math.max(24,CW*0.86*ppu)+"px")}
+  const cr=camRight();tags.forEach(t=>{if(t.fl){t.fl.getWorldPosition(t.pos);t.pos.addScaledVector(cr,t.hw)}v.copy(t.pos).project(camera);const vis=v.z<1&&Math.abs(v.x)<1.1&&Math.abs(v.y)<1.1&&!(t.city&&(open.path||mode!=="3d"||close))&&!(t.layer&&(!ON[t.layer]||mode!=="3d"||open.path))&&!(t.metro&&open.path);t.el.style.display=vis?"":"none";t.el.style.left=(v.x+1)/2*w+"px";t.el.style.top=(1-v.y)/2*h+"px"})});
+</script></body></html>

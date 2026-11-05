@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Explore a codebase as a 3D city and follow real user actions through the code.">
+<title>Boarding City</title>
+<style>
+/* Layout: one full-viewport app. A slim bar (name, repository link + switcher, fullscreen) over a full-bleed city. */
+:root{--bg:#0a0d16;--bar:#0f1320;--field:#151b2b;--line:#ffffff1a;--ink:#e8ecf5;--mute:#8b93a7;--acc:#5eead4;color-scheme:dark;
+  --ui:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,"SF Mono",Menlo,monospace}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.4 var(--ui);overflow:hidden}
+#shell{height:100%;display:flex;flex-direction:column;background:var(--bg)}
+header{position:relative;z-index:4;display:flex;align-items:center;gap:12px;min-height:48px;padding-block:6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--bar);border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:15px;font-weight:700;white-space:nowrap}
+h1 .mark{color:var(--acc)}h1 small{color:var(--mute);font-weight:500}
+.repo{position:relative;min-width:0;display:flex;align-items:stretch;height:34px;background:var(--field);border:1px solid var(--line);border-radius:8px}
+.repo svg{flex:none}
+#repoLink{min-width:0;display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--ink);text-decoration:none;font:13px var(--mono);border-radius:8px 0 0 8px}
+#repoLink:hover{background:#ffffff08}#repoLink:hover .url{text-decoration:underline}
+#repoLink .url{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#repoLink .sha{flex:none;color:var(--mute);font-size:12px}#repoLink .ext{flex:none;color:var(--mute)}
+#switch{flex:none;display:flex;align-items:center;gap:6px;background:transparent;color:var(--ink);border:0;border-left:1px solid var(--line);border-radius:0 8px 8px 0;padding:0 10px;font:600 13px var(--ui);cursor:pointer}
+#switch:hover{background:#ffffff08}
+.kbd{font:11px var(--mono);color:var(--mute);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-weight:400}
+#menu{position:absolute;top:calc(100% + 6px);right:0;min-width:min(380px,calc(100vw - 32px));background:#121726;border:1px solid #ffffff26;border-radius:10px;padding:6px;box-shadow:0 12px 40px #000a;display:grid;gap:2px}
+#menu[hidden]{display:none}
+#menu .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:6px 8px 2px}
+#menu [role=option]{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:8px;border-radius:7px;cursor:pointer;outline:none}
+#menu [role=option]:hover,#menu [role=option]:focus-visible,#menu [role=option].active{background:#ffffff10}
+#menu .nm{font:600 13px var(--mono)}#menu .cur{color:var(--acc);font-size:12px}
+#menu .st{grid-column:1/-1;color:var(--mute);font-size:12px;font-variant-numeric:tabular-nums}
+.spacer{flex:1}
+#fs{flex:none;background:#1c2335;color:var(--ink);border:1px solid var(--line);border-radius:8px;height:34px;padding:0 12px;font:600 13px var(--ui);cursor:pointer;white-space:nowrap}
+button:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+main{position:relative;flex:1;min-height:0}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:var(--bg)}
+#toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#121726f2;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;z-index:3}
+#toast[hidden]{display:none}
+@media (max-width:820px){h1 small{display:none}.kbd{display:none}}
+@media (max-width:600px){header{gap:8px}#fs .t,#repoLink .sha,#repoLink .host,h1 .name,#switch .t{display:none}}
+</style>
+
+<div id="shell">
+  <header>
+    <h1><span class="mark" aria-hidden="true">▦</span> <span class="name">Boarding City</span> <small>· Next stop: understanding.</small></h1>
+    <div class="repo">
+      <a id="repoLink" target="_blank" rel="noopener" title="Open on GitHub">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+        <span class="url"><span class="host">github.com/</span><span id="repoName"></span></span><span class="sha" id="sha"></span><span class="ext" aria-hidden="true">↗</span>
+      </a>
+      <button type="button" id="switch" aria-haspopup="listbox" aria-expanded="false" aria-controls="menu" title="Switch repository (Ctrl/⌘ K)"><span class="t">Switch</span> ▾ <span class="kbd" aria-hidden="true">⌘K</span></button>
+      <div id="menu" role="listbox" aria-label="Mapped repositories" hidden></div>
+    </div>
+    <span class="spacer"></span>
+    <button type="button" id="fs" title="Fullscreen (Esc to exit)" aria-label="Fullscreen">⛶<span class="t"> Fullscreen</span></button>
+  </header>
+  <main><iframe id="city" title="Boarding City" allow="fullscreen"></iframe><div id="toast" role="status" hidden></div></main>
+</div>
+
+<script>
+// The cities shipped with this page.
+const REPOS=[  // generated by `python -m boarding_city site` from site/repos.json
+  {key:"excalidraw",repo:"excalidraw/excalidraw",sha:"7ded689",src:"excalidraw/demo.html",files:425,flows:8,cost:"$0.25"},
+  {key:"supabase",repo:"supabase/supabase",sha:"c7baea1",src:"supabase/demo.html",files:6847,flows:6,cost:"$0.10"},
+  {key:"ky",repo:"sindresorhus/ky",sha:"3541888",src:"ky/demo.html",files:31,flows:4,cost:"$0.02"}];
+const $=id=>document.getElementById(id),city=$("city"),shell=$("shell"),link=$("repoLink"),sw=$("switch"),menu=$("menu");
+let current=null;
+function show(r){$("repoName").textContent=r.repo;$("sha").textContent="@ "+r.sha;
+  link.href=`https://github.com/${r.repo}/tree/${r.sha}`;link.title=`Open ${r.repo} at commit ${r.sha} on GitHub`;link.setAttribute("aria-label",link.title)}
+// routes: #excalidraw, #supabase, or #<key>-flow-<id> to open one isolated flow
+function route(){const m=location.hash.match(/^#([a-z0-9]+)(?:-flow-([\w-]+))?$/),r=REPOS.find(x=>m&&x.key===m[1])||REPOS[0],hash=m&&m[2]?"#flow-"+m[2]:"";
+  if(r!==current){current=r;city.src=r.src+hash}else if(hash){try{city.contentWindow.location.hash=hash}catch{}}show(r)}
+addEventListener("hashchange",route);route();
+function focusCity(){try{city.contentWindow.focus()}catch{}}
+city.addEventListener("load",focusCity);
+// ---- repository switcher ----
+const opts=()=>[...menu.querySelectorAll("[role=option]")];
+function openMenu(){menu.innerHTML=`<div class="lbl">Mapped repositories</div>`+REPOS.map(r=>`<div role="option" tabindex="-1" data-key="${r.key}" aria-selected="${r===current}">
+  <span class="nm">${r.repo}</span>${r===current?'<span class="cur">current</span>':"<span></span>"}<span class="st">${r.files.toLocaleString("en")} files · ${r.flows} flows · ≈ ${r.cost} to build · @${r.sha}</span></div>`).join("");
+  menu.hidden=false;sw.setAttribute("aria-expanded","true");(opts().find(o=>o.dataset.key===current.key)||opts()[0]).focus()}
+function closeMenu(refocus){menu.hidden=true;sw.setAttribute("aria-expanded","false");if(refocus)sw.focus()}
+function pick(key){closeMenu();if(location.hash==="#"+key)route();else location.hash=key;focusCity()}
+sw.onclick=()=>menu.hidden?openMenu():closeMenu();
+menu.addEventListener("click",e=>{const o=e.target.closest("[role=option]");if(o)pick(o.dataset.key)});
+menu.addEventListener("keydown",e=>{const L=opts(),i=L.indexOf(document.activeElement);
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();L[(i+(e.key==="ArrowDown"?1:L.length-1))%L.length].focus()}
+  else if(e.key==="Enter"||e.key===" "){e.preventDefault();if(i>=0)pick(L[i].dataset.key)}
+  else if(e.key==="Escape"||e.key==="Tab"){e.preventDefault();closeMenu(true)}});
+document.addEventListener("pointerdown",e=>{if(!menu.hidden&&!e.target.closest(".repo"))closeMenu()});
+city.addEventListener("pointerenter",()=>{if(!menu.hidden)closeMenu()});
+// ---- keyboard: Ctrl/⌘K opens the switcher; other keys pressed in the bar still drive the city ----
+function onKey(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();menu.hidden?openMenu():closeMenu(true);return true}return false}
+addEventListener("keydown",e=>{if(onKey(e)||e.ctrlKey||e.metaKey||e.altKey||!menu.hidden||["Tab"," ","Enter"].includes(e.key))return;
+  try{if(city.contentWindow.cityAPI?.key(e.key)){e.preventDefault();focusCity()}}catch{}});
+city.addEventListener("load",()=>{try{city.contentWindow.addEventListener("keydown",e=>{onKey(e)})}catch{}});
+// ---- fullscreen: optional, hidden where the browser or frame can't do it ----
+const fs=$("fs"),toast=$("toast");let tt=0;function say(t){toast.textContent=t;toast.hidden=false;clearTimeout(tt);tt=setTimeout(()=>toast.hidden=true,2600)}
+if(!document.fullscreenEnabled||!shell.requestFullscreen)fs.hidden=true;
+fs.onclick=()=>{if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});return}
+  shell.requestFullscreen().then(focusCity).catch(()=>say("Fullscreen isn't available in this view. Try opening the page on its own."))};
+document.addEventListener("fullscreenchange",()=>{const on=!!document.fullscreenElement;fs.innerHTML=on?'✕<span class="t"> Exit fullscreen</span>':'⛶<span class="t"> Fullscreen</span>';fs.setAttribute("aria-label",on?"Exit fullscreen":"Fullscreen")});
+</script>
