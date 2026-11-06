@@ -11,6 +11,7 @@ CSS = """
 #fogHud{position:absolute;left:12px;top:58px;z-index:6;width:250px;background:var(--panel);border:1px solid #ffffff14;border-radius:12px;padding:9px 12px;font-size:12px;backdrop-filter:blur(6px)}
 #fogHud[hidden]{display:none}
 #fogHud .fh-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#fogHud .fh-btns{display:flex;gap:4px}#fogHud.min .fh-d,#fogHud.min .fh-meta{display:none}
 #fogHud .fh-top b{font-size:13.5px}#fogHud .fh-top b span{color:var(--acc)}
 #fogHud button{background:transparent;border:1px solid #ffffff2a;color:var(--mute);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer}
 #fogHud .fh-d{display:grid;grid-template-columns:1fr 34px;gap:2px 8px;margin-top:7px;align-items:center}
@@ -31,7 +32,7 @@ CSS = """
 /* /FOG-POC */
 """
 
-HTML = '<!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><button id="fhReset" title="Hide everything again">Reset fog</button></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->'
+HTML = '<!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><span class="fh-btns"><button id="fhReset" title="Hide everything again">Reset fog</button><button id="fhMin" aria-expanded="true" title="Collapse">▴</button></span></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->'
 
 JS = r"""
 /* ==== FOG-POC: fog of war (removable, see inject_fog.py) ==== */
@@ -40,9 +41,9 @@ const FKEY="boarding-city-fog-"+(D.repo||"repo");
 const store={get(){try{return JSON.parse(localStorage.getItem(FKEY)||"null")}catch{return null}},
   set(v){try{localStorage.setItem(FKEY,JSON.stringify(v))}catch{}},clear(){try{localStorage.removeItem(FKEY)}catch{}}};
 const saved=store.get()||{};
-const S={b:saved.b||{},on:saved.on!==false};            // b: building path -> 0.5 (glimpsed) | 1 (explored)
+const S={b:saved.b||{},on:saved.fog===true};            // fog is opt-in (Layers)            // b: building path -> 0.5 (glimpsed) | 1 (explored)
 const fnSet=new Set(saved.f||[]),flSet=new Set(saved.fl||[]),msSet=new Set(saved.ms||[]);
-const save=()=>store.set({b:S.b,on:S.on,f:[...fnSet],fl:[...flSet],ms:[...msSet]});
+const save=()=>store.set({b:S.b,fog:S.on,f:[...fnSet],fl:[...flSet],ms:[...msSet]});
 
 // ---- friendly names, from data already in the build (file summaries, flow narration) ----
 const narr={};D.flows.forEach(F=>F.steps.forEach(s=>{narr[s.path+"::"+s.function]??=s.narration}));
@@ -155,6 +156,8 @@ requestAnimationFrame(fogFrame);
 
 // ---- controls: Layers toggle + reset ----
 $("layerList").insertAdjacentHTML("afterbegin",`<label title="Unexplored code stays hidden until you walk a flow or open a building."><input type="checkbox" id="fogToggle" ${S.on?"checked":""}><b>Fog of war</b><em></em><i>Unexplored code stays hidden until you walk a flow or open a building.</i></label>`);
+{const m=$("fhMin"),hud=$("fogHud"),set=v=>{hud.classList.toggle("min",v);m.textContent=v?"▾":"▴";m.title=v?"Show the details":"Collapse";m.setAttribute("aria-expanded",String(!v));try{localStorage.setItem("bc-fog-min",v?"1":"0")}catch{}};
+  let v=false;try{v=localStorage.getItem("bc-fog-min")==="1"}catch{}set(v);m.onclick=()=>set(!hud.classList.contains("min"))}
 $("fogToggle").addEventListener("change",e=>{e.stopPropagation();S.on=e.target.checked;changed()});
 $("fhReset").onclick=()=>{S.b={};fnSet.clear();flSet.clear();msSet.clear();PATHS.forEach(p=>BS[p].goal=0);store.clear();quiet=true;changed();requestAnimationFrame(()=>requestAnimationFrame(()=>quiet=false))};
 window.cityFog={state:()=>({pct:pct(),fns:fnSet.size,flows:flSet.size,on:S.on,glimpsed:PATHS.filter(p=>S.b[p]===0.5).length}),reveal,reset:()=>$("fhReset").click(),open:p=>showFile(p),toggle:on=>{const t=$("fogToggle");if(t.checked!==on){t.checked=on;t.dispatchEvent(new Event("change",{bubbles:true}))}}};

@@ -180,6 +180,7 @@ const _showFile=showFile;showFile=function(p,keep){viewing=false;if(!keep)expand
 const _showFn=showFn;showFn=function(p,n,extra){viewing=false;if(!flow.on)expand();const r=_showFn(p,n,extra);files.add(H(p));fns.add(p+"::"+n);if(deadFn(p,n))ghosts.add(p+"::"+n);linkFn(p,n);check();return r};
 const _showDistrict=showDistrict;showDistrict=function(i){viewing=false;expand();return _showDistrict(i)};
 const _isolate=isolate;isolate=function(fi,instant){if(Q.on)return;L.diagram=true;check();return _isolate(fi,instant)};
+const _isolate3D=isolate3D;isolate3D=function(fi){if(!Q.on)return _isolate3D(fi)};  // isolating would point at the answers
 const _showStep=showStep;showStep=function(k){const r=_showStep(k);if(P.fi!==null&&P.k===D.flows[P.fi].steps.length-1&&!Q.on&&!flowsSeen.has(P.fi)){flowsSeen.add(P.fi);check()}return r};
 
 // ---- the quiz: at every step, predict the function that runs next ----
@@ -282,23 +283,26 @@ const tourEl=document.createElement("div");tourEl.id="tour";tourEl.hidden=true;
 tourEl.innerHTML=`<div class="tt"><b id="tourT"></b><span id="tourN"></span></div><p id="tourP" role="status"></p><div class="tb"><button type="button" id="tourPause" title="Pause the tour">⏸ Pause</button><button type="button" id="tourSkip" title="Next stop of the tour">Next ▸</button><button type="button" id="tourStop">✕ End tour</button><span class="th">or click anywhere to explore on your own</span></div><i><u id="tourBar"></u></i>`;
 app.appendChild(tourEl);const tbar=$q("tourBar");
 function stops(){const S=[{t:D.repo,p:D.app,go:showCity,ms:7000}],sum=p=>byPath[H(p)]?.summary||"";
-  D.districts.slice(0,8).forEach((d,i)=>S.push({t:`District: ${d.name}`,p:d.summary,go:()=>showDistrict(i),ms:5000}));
+  D.districts.slice(0,8).forEach((d,i)=>S.push({t:`District: ${d.name}`,p:d.summary,go:()=>{showDistrict(i);glow(i)},ms:5000}));
   ENTRY.slice(0,3).forEach(x=>S.push({t:`Front door: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
   MAIN.slice(0,3).forEach(x=>S.push({t:`Main street: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
   flowIdx.filter(fi=>!D.flows[fi].extra).slice(0,2).forEach(fi=>S.push({t:`Walkthrough: ${D.flows[fi].title}`,p:D.flows[fi].desc,flow:fi}));
   S.push({t:"Tour done",p:"Check what stuck: take the “what runs next?” quiz on a flow, and earn the core badges to be ready for your first change.",go:showOnboarding,ms:8000});return S}
+// the district a tour stop talks about glows in its own colour
+const plates=pickables.filter(m=>m.userData.kind==="district"),mats=m=>Array.isArray(m.material)?m.material:[m.material];let lit=null;
+function glow(i){if(lit)mats(lit).forEach(x=>x.emissive?.setHex(0));lit=i==null?null:plates.find(m=>m.userData.i===i);if(lit)mats(lit).forEach(x=>x.emissive?.setHex(COLORS[i%COLORS.length]).multiplyScalar(.45))}
 // time that only runs while the tour plays; Next or End resolve it early
 function hold(ms,run){return new Promise(ok=>{let left=ms,last=performance.now();T.skip=ok;
   const f=()=>{if(run!==T.run)return ok();const now=performance.now();if(!T.paused)left-=now-last;last=now;tbar.style.width=Math.min(100,100*(1-left/ms))+"%";left<=0?ok():setTimeout(f,100)};f()})}
 function ride(fi,run){return new Promise(ok=>{T.skip=ok;startFlow(fi);const f=()=>{if(run!==T.run||P.fi!==fi||P.ended)return ok();
   const N=D.flows[fi].steps.length;tbar.style.width=100*(P.k+1)/N+"%";setTimeout(f,200)};setTimeout(f,400)})}
 function placeTour(){const b=document.getElementById("bar").getBoundingClientRect(),a=app.getBoundingClientRect();tourEl.style.top=(b.bottom-a.top+8)+"px"}
-async function startTour(){if(Q.on)endQuiz();const run=++T.run;T.on=true;T.paused=false;L.toured=true;save();tourEl.hidden=false;setMin(false);renderPause();
+async function startTour(){if(Q.on)endQuiz();const run=++T.run;T.on=true;T.paused=false;tourEl.hidden=false;setMin(false);renderPause();
   const S=stops();for(let i=0;i<S.length&&run===T.run;i++){const s=S[i];placeTour();
     $q("tourT").textContent=s.t;$q("tourN").textContent=`${i+1}/${S.length}`;$q("tourP").textContent=s.p;tbar.style.width="0";
-    if(s.flow!==undefined)await ride(s.flow,run);else{s.go();await hold(s.ms,run)}}
+    glow(null);if(s.flow!==undefined)await ride(s.flow,run);else{s.go();await hold(s.ms,run)}}
   if(run===T.run)stopTour(true)}
-function stopTour(done){T.run++;T.on=false;tourEl.hidden=true;if(!done&&P.playing)pause()}
+function stopTour(done){T.run++;T.on=false;tourEl.hidden=true;glow(null);if(!done&&P.playing)pause()}
 function renderPause(){$q("tourPause").textContent=T.paused?"⏵ Play":"⏸ Pause"}
 $q("tourPause").onclick=()=>{T.paused=!T.paused;renderPause();if(P.fi!==null)T.paused?pause():play()};
 $q("tourSkip").onclick=()=>{if(P.fi!==null)stopFlow();T.paused=false;renderPause();T.skip?.()};
@@ -313,12 +317,12 @@ function welcome(){const S=stops(),mins=Math.max(1,Math.round((S.reduce((a,s)=>a
   const dlg=document.createElement("dialog");dlg.id="welcome";dlg.setAttribute("aria-labelledby","wTitle");
   dlg.innerHTML=`<h2 id="wTitle">Welcome to the ${esc(D.repo)} city</h2><p>Every building is a file and every floor a function. New here? The guided tour plays itself in about ${mins} minute${mins===1?"":"s"}: the main areas, where features start, the files everything depends on, and real user actions running through the code.</p>
     <div class="wb"><button type="button" class="primary" id="wStart" autofocus>▶ Start the guided tour</button><button type="button" id="wSkip">I'll explore on my own</button></div><small>You can replay it any time from 🎓 Onboarding.</small>`;
-  app.appendChild(dlg);const done=()=>{L.toured=true;save()};
+  app.appendChild(dlg);const done=()=>{L.welcomed=true;save()};
   dlg.querySelector("#wStart").onclick=()=>{dlg.close();startTour()};dlg.querySelector("#wSkip").onclick=()=>dlg.close();
   dlg.addEventListener("close",()=>{done();dlg.remove()});
   // the city's own Escape handler would otherwise swallow the dialog's
   dlg.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();dlg.close()}});dlg.showModal()}
-if(!D.building){if(location.hash==="#tour")setTimeout(startTour,1200);else if(!L.toured)setTimeout(welcome,900)}
+if(!D.building){if(location.hash==="#tour")setTimeout(startTour,1200);else if(!L.welcomed)setTimeout(welcome,900)}
 window.cityAPI=Object.assign(window.cityAPI||{},{learn:{state:()=>({pct:overall(),won:[...won],badges:BADGES.map(b=>({id:b.id,...prog(b),it:undefined})),quiz:{...Q,answered:[...Q.answered]},min:mini}),
   show:showOnboarding,quiz:startQuiz,tour:startTour}});
 }

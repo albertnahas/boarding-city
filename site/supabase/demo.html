@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-ApTVGh2X0+BQa8HKH+cJY1wJHHC7uk0N4EySv4S6cQ4=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-59IJGgEp3jM9ixE396eXR2eG1BbTlbDzPlz3lj1FRnw=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Code City</title>
 <style>
 :root{--bg:#0a0d16;--panel:#121726ee;--ink:#e8ecf5;--mute:#8b93a7;--acc:#5eead4;--flow:#fbbf24}
@@ -19,7 +19,8 @@ button.primary{background:var(--flow);color:#1a1300;border:none;font-weight:600}
 .tag{position:absolute;pointer-events:none;font-size:12px;font-weight:600;padding:2px 7px;border-radius:5px;background:#000a;white-space:nowrap;transform:translate(-50%,-100%)}
 .ftag{transform:translate(0,-50%);font-weight:500;font-size:11.5px;background:#0a0d16cc;border:1px solid #ffffff14}.ftag.on{color:var(--flow)!important;border-color:#fbbf2466;font-weight:600}
 .hoptag{transform:translate(-50%,-50%);font-size:10.5px;font-weight:500;background:#1a1300dd;border:1px dashed #fbbf24aa}
-#backBtn[hidden]{display:none}
+#backBtn[hidden],#iso3Exit[hidden]{display:none}
+#app.iso3 .tag:not(.mtag):not(.ftag):not(.hoptag){visibility:hidden!important}
 #paper{position:absolute;inset:0;z-index:14;background:#05070dcc;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}#paper[hidden]{display:none}
 #paper .sheet{position:relative;width:min(920px,100%);max-height:100%;overflow:auto;background:#f3eee1;color:#1f1b16;border-radius:4px;padding:22px 26px;box-shadow:0 20px 60px #000c;font:15px/1.45 Georgia,"Times New Roman",serif}
 #paper header{text-align:center;border-bottom:3px double #1f1b16;padding-bottom:8px;margin-bottom:14px}
@@ -63,7 +64,7 @@ button.primary{background:var(--flow);color:#1a1300;border:none;font-weight:600}
 #isoBar .st{font-size:12px;color:var(--mute)}
 #isoFig{position:relative;flex:1;min-height:0;padding:0 12px 12px}#isoFig svg{width:100%;height:100%;display:block}
 #app.isolated #bar,#app.isolated #panel,#app.isolated .tag,#app.isolated #hover{display:none}
-button.isoLink{background:transparent;border:1px solid #5eead466;color:var(--acc);padding:3px 8px;font-size:12px;margin-top:5px}
+button.isoLink,button.iso3Link{background:transparent;border:1px solid #5eead466;color:var(--acc);padding:3px 8px;font-size:12px;margin-top:5px}
 #isoModal{position:absolute;inset:0;z-index:20;background:#000a;display:flex;align-items:center;justify-content:center;padding:16px}#isoModal[hidden]{display:none}
 #isoModal .card{background:#121726;border:1px solid #ffffff22;border-radius:12px;padding:16px;max-width:min(920px,100%);max-height:100%;overflow:auto;display:grid;gap:10px}
 #isoModal img{max-width:100%;max-height:60vh;border-radius:8px;border:1px solid #ffffff22;justify-self:center}
@@ -87,6 +88,7 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 #fogHud{position:absolute;left:12px;top:58px;z-index:6;width:250px;background:var(--panel);border:1px solid #ffffff14;border-radius:12px;padding:9px 12px;font-size:12px;backdrop-filter:blur(6px)}
 #fogHud[hidden]{display:none}
 #fogHud .fh-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#fogHud .fh-btns{display:flex;gap:4px}#fogHud.min .fh-d,#fogHud.min .fh-meta{display:none}
 #fogHud .fh-top b{font-size:13.5px}#fogHud .fh-top b span{color:var(--acc)}
 #fogHud button{background:transparent;border:1px solid #ffffff2a;color:var(--mute);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer}
 #fogHud .fh-d{display:grid;grid-template-columns:1fr 34px;gap:2px 8px;margin-top:7px;align-items:center}
@@ -216,7 +218,7 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 .ob-tour{width:100%;margin:2px 0 10px;padding:8px;font-weight:700}
 @media (max-width:900px){#tour{left:8px;right:8px}}
 @media (prefers-reduced-motion:reduce){#qzFb.no{animation:none}#learnToast{transition:none}}/* /learn-css */</style></head><body>
-<div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D diagram</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button></div><div id="hover"></div><!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><button id="fhReset" title="Hide everything again">Reset fog</button></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->
+<div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D diagram</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button><button id="iso3Exit" hidden>✕ Show the whole city</button></div><div id="hover"></div><!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><span class="fh-btns"><button id="fhReset" title="Hide everything again">Reset fog</button><button id="fhMin" aria-expanded="true" title="Collapse">▴</button></span></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->
 <div id="paper" hidden role="dialog" aria-modal="true" aria-label="The Daily Commit"><article class="sheet"><button id="paperClose" aria-label="Close the paper">✕</button>
 <header><div class="ears"><span id="paperEarL"></span><span>Price: zero bugs</span></div><h1>The Daily Commit</h1><div class="dateline" id="paperDate"></div></header><div id="paperBody"></div>
 <footer>Every number is computed from the source by static analysis; the jokes are written by AI. Unreached code may still run dynamically.</footer></article></div>
@@ -435,7 +437,7 @@ document.getElementById("layerList").addEventListener("change",e=>{const k=e.tar
 function setNight(on){scene.background.setHex(on?0x03040a:0x0a0d16);for(const f of[scene.fog,fogSaved])f?.color.setHex(on?0x03040a:0x0a0d16);hemi.intensity=on?0.22:1.1;sun.intensity=on?0.12:1.4;
   LAND.userData.lamps?.material.emissive.setHex(on?0xfff1b8:0)}
 let lastT=0;const pv=new THREE.Vector3();
-function updateLayers(now){const dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;const city=mode==="3d"&&!open.path,close=city&&camera.position.distanceTo(controls.target)<42;
+function updateLayers(now){const dt=Math.min(0.05,(now-(lastT||now))/1000);lastT=now;const city=mode==="3d"&&!open.path&&iso3.fi===null,close=city&&camera.position.distanceTo(controls.target)<42;
   for(const k in LG)LG[k].visible=city&&ON[k];DETAIL.visible=close;LIT.visible=city&&ON.night;LAND.visible=city;
   for(const mv of movers){if(!mv.group.visible)continue;mv.vs.forEach((v,i)=>{v.u+=v.dir*v.sp*dt/Math.max(1,v.R.len);if(v.u>1){v.u=1;v.dir=-1}if(v.u<0){v.u=0;v.dir=1}
     const ang=at(v.R,v.u,pv);dummy.position.copy(pv);dummy.position.y+=0.13;dummy.rotation.set(0,ang+(v.dir<0?Math.PI:0),0);dummy.scale.set(1,1,1);dummy.updateMatrix();mv.m.setMatrixAt(i,dummy.matrix)});mv.m.instanceMatrix.needsUpdate=true}
@@ -488,7 +490,7 @@ async function doClose(){const p=open.path;if(!p)return;const ms=buildings[p].gr
   const from=ms.map(m=>({y:m.position.y,s:m.scale.y,w:m.scale.x}));
   await tween(800,e=>{ms.forEach((m,k)=>{m.position.y=from[k].y+(m.userData.y0-from[k].y)*e;m.scale.y=from[k].s+(1-from[k].s)*e;m.scale.x=m.scale.z=from[k].w+(1-from[k].w)*e});
     fade.forEach(m=>m.material.opacity=0.1+0.9*e)});
-  fade.forEach(m=>{m.material.transparent=false;m.material.depthWrite=true;m.material.opacity=1;m.material.needsUpdate=true});open.path=null;open.L=null;backBtn.hidden=true}
+  fade.forEach(m=>{m.material.transparent=false;m.material.depthWrite=true;m.material.opacity=1;m.material.needsUpdate=true});if(iso3.fi!==null)fadeIso3();open.path=null;open.L=null;backBtn.hidden=true}
 function closeBuilding(){return open.busy=open.busy.then(doClose)}
 const camRight=()=>{const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);r.y=0;return r.normalize()};
 // a point on the left face of an open floor, where the flow path runs
@@ -510,7 +512,7 @@ function arc(a,b,color,r=0.06,top=color===0xfbbf24){const pa=new THREE.Vector3(a
   const t=new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(pa,mid,pb),40,r,6),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.85,depthTest:!top}));t.renderOrder=top?10:0;scene.add(t);arcs.push(t);return t}
 function crumb(parts){crumbs.innerHTML=parts.map((p,i)=>i<parts.length-1?`<a data-i="${i}">${esc(p[0])}</a>`:esc(p[0])).join(" › ");
   crumbs.querySelectorAll("a").forEach(a=>a.onclick=()=>parts[a.dataset.i][1]())}
-function showCity(){stopFlow();closeBuilding();highlight(null);clearArcs();if(mode==="2d"){clear2DFlow();fit2D()}else if(mode==="3d")fly(CITY,CITYD,1.1);crumb([["City"]]);
+function showCity(){unisolate3D();stopFlow();closeBuilding();highlight(null);clearArcs();if(mode==="2d"){clear2DFlow();fit2D()}else if(mode==="3d")fly(CITY,CITYD,1.1);crumb([["City"]]);
   panel.innerHTML=`<h2>${esc(D.repo)}</h2><div class="sub">${esc(D.app)}</div><ul class="list">${D.districts.map((d,i)=>`<li data-i="${i}"><b style="color:#${COLORS[i].toString(16)}">${esc(d.name)}</b><span>${esc(d.summary)} · ${(d.total??d.files.length).toLocaleString()} files</span></li>`).join("")}</ul>`;
   panel.querySelectorAll("li").forEach(li=>li.onclick=()=>showDistrict(+li.dataset.i))}
 function showDistrict(i){stopFlow();closeBuilding();highlight(null);clearArcs();const d=D.districts[i];if(mode==="3d")fly(d.center,d.size*1.35);crumb([["City",showCity],[d.name]]);
@@ -532,7 +534,8 @@ function showFn(p,name,extra=""){const m=floors[p][name]||Object.values(floors[p
   if(!flow.on)wireReach(p,fn.name);if(mode==="2d")mark2D(p,fn.name)}
 // ---- flows a function is part of (index built from the verified flows) ----
 const fnFlows={};D.flows.forEach((F,fi)=>F.steps.forEach((s,k)=>{const key=s.path+"::"+s.function;(fnFlows[key]??=[]);if(!fnFlows[key].some(x=>x.fi===fi))fnFlows[key].push({fi,k})}));
-const isoBtn=fi=>`<button class="isoLink" data-fi="${fi}">⧉ Isolate flow</button>`;
+const isoBtn=fi=>`<button class="isoLink" data-fi="${fi}" title="Draw this flow alone as a 2D diagram">⧉ Isolate in 2D</button> <button class="iso3Link" data-fi="${fi}" title="Keep only the buildings this flow passes through">▦ Isolate in 3D</button>`;
+const iso3={fi:null};  // a flow isolated in the 3D city
 const flowItem=(fi,note)=>{const F=D.flows[fi];return `<li class="flowitem" data-fi="${fi}"><b>▶ ${esc(F.title)}</b><span>${esc(note||F.desc)}</span>${isoBtn(fi)}</li>`};
 function fnFlowsHTML(p,name){const hits=fnFlows[p+"::"+name]||[];
   if(!hits.length){const same=D.flows.map((F,fi)=>F.steps.some(s=>s.path===p)?fi:-1).filter(fi=>fi>=0);
@@ -730,7 +733,7 @@ function mark2D(p,name){const n=two.nodes[p+"::"+name];two.list.forEach(x=>{if(x
 const allFloors=()=>cityGroups.flatMap(g=>g.children),plates=pickables.filter(m=>m.userData.kind==="district");
 const mats=m=>Array.isArray(m.material)?m.material:[m.material];
 let fogSaved=null;
-async function to2D(){if(mode!=="3d")return;controls.enableDamping=false;pause();highlight(null);clearArcs();await closeBuilding();mode="morph";modeBtn.textContent="3D city";modeBtn.classList.add("on");
+async function to2D(){if(mode!=="3d")return;await unisolate3D();controls.enableDamping=false;pause();highlight(null);clearArcs();await closeBuilding();mode="morph";modeBtn.textContent="3D city";modeBtn.classList.add("on");
   const fl=allFloors(),pl=plates.flatMap(mats);[...fl.flatMap(mats),...pl].forEach(m=>{m.transparent=true;m.depthWrite=false;m.needsUpdate=true});
   const start=two.list.map(n=>{const v=new THREE.Vector3();(floors[n.path][n.name]||Object.values(floors[n.path])[0]).getWorldPosition(v);return v});
   two.list.forEach((n,i)=>{n.mesh.visible=true;n.mesh.position.copy(start[i]);n.mesh.scale.set(0.25,1,1)});two.boxes.forEach(b=>b.mesh.visible=true);
@@ -843,7 +846,17 @@ document.getElementById("isoLinkBtn").onclick=()=>{const link=location.href.spli
   modal(`<h2>Link to this flow</h2><input id="mLink" readonly value="${xesc(link)}">`);const inp=document.getElementById("mLink"),st=document.getElementById("mSt");
   navigator.clipboard.writeText(link).then(()=>st.textContent="Link copied.",()=>{inp.focus();inp.select();st.textContent="Copying isn't allowed here: the link is selected, press Ctrl/Cmd+C."})};
 // isolate buttons anywhere in the panel win over the item's own click (capture phase)
-panel.addEventListener("click",e=>{const b=e.target.closest(".isoLink");if(!b)return;e.stopPropagation();isolate(+b.dataset.fi)},true);
+panel.addEventListener("click",e=>{const b=e.target.closest(".isoLink");if(!b)return;e.stopPropagation();unisolate3D();isolate(+b.dataset.fi)},true);
+// ---- isolate a flow in 3D: only the buildings it passes through stay solid, the rest of the city fades away ----
+const ghostMat=m=>{m.material.transparent=true;m.material.depthWrite=false;m.material.opacity=.06;m.material.needsUpdate=true};
+function fadeIso3(){const keep=new Set(D.flows[iso3.fi].steps.map(s=>home[s.path]||s.path));
+  for(const [p,b] of Object.entries(buildings))if(!keep.has(p))b.group.children.forEach(ghostMat)}
+async function isolate3D(fi){if(iso.fi!==null)await unisolate();if(mode==="2d")await to3D();await closeBuilding();
+  iso3.fi=fi;app.classList.add("iso3");$("iso3Exit").hidden=false;fadeIso3();startFlow(fi)}
+async function unisolate3D(){if(iso3.fi===null)return;iso3.fi=null;app.classList.remove("iso3");$("iso3Exit").hidden=true;await closeBuilding();
+  Object.values(buildings).forEach(b=>b.group.children.forEach(m=>{m.material.transparent=false;m.material.depthWrite=true;m.material.opacity=1;m.material.needsUpdate=true}))}
+panel.addEventListener("click",e=>{const b=e.target.closest(".iso3Link");if(!b)return;e.stopPropagation();isolate3D(+b.dataset.fi)},true);
+$("iso3Exit").onclick=()=>{unisolate3D();showGallery()};
 function openHash(){const m=location.hash.match(/^#flow-([\w-]+)$/),fi=m?FLOWID.indexOf(m[1]):-1;if(fi>=0&&iso.fi!==fi){iso.busy=false;isolate(fi,true)}}
 addEventListener("hashchange",openHash);
 
@@ -894,9 +907,9 @@ const FKEY="boarding-city-fog-"+(D.repo||"repo");
 const store={get(){try{return JSON.parse(localStorage.getItem(FKEY)||"null")}catch{return null}},
   set(v){try{localStorage.setItem(FKEY,JSON.stringify(v))}catch{}},clear(){try{localStorage.removeItem(FKEY)}catch{}}};
 const saved=store.get()||{};
-const S={b:saved.b||{},on:saved.on!==false};            // b: building path -> 0.5 (glimpsed) | 1 (explored)
+const S={b:saved.b||{},on:saved.fog===true};            // fog is opt-in (Layers)            // b: building path -> 0.5 (glimpsed) | 1 (explored)
 const fnSet=new Set(saved.f||[]),flSet=new Set(saved.fl||[]),msSet=new Set(saved.ms||[]);
-const save=()=>store.set({b:S.b,on:S.on,f:[...fnSet],fl:[...flSet],ms:[...msSet]});
+const save=()=>store.set({b:S.b,fog:S.on,f:[...fnSet],fl:[...flSet],ms:[...msSet]});
 
 // ---- friendly names, from data already in the build (file summaries, flow narration) ----
 const narr={};D.flows.forEach(F=>F.steps.forEach(s=>{narr[s.path+"::"+s.function]??=s.narration}));
@@ -1009,6 +1022,8 @@ requestAnimationFrame(fogFrame);
 
 // ---- controls: Layers toggle + reset ----
 $("layerList").insertAdjacentHTML("afterbegin",`<label title="Unexplored code stays hidden until you walk a flow or open a building."><input type="checkbox" id="fogToggle" ${S.on?"checked":""}><b>Fog of war</b><em></em><i>Unexplored code stays hidden until you walk a flow or open a building.</i></label>`);
+{const m=$("fhMin"),hud=$("fogHud"),set=v=>{hud.classList.toggle("min",v);m.textContent=v?"▾":"▴";m.title=v?"Show the details":"Collapse";m.setAttribute("aria-expanded",String(!v));try{localStorage.setItem("bc-fog-min",v?"1":"0")}catch{}};
+  let v=false;try{v=localStorage.getItem("bc-fog-min")==="1"}catch{}set(v);m.onclick=()=>set(!hud.classList.contains("min"))}
 $("fogToggle").addEventListener("change",e=>{e.stopPropagation();S.on=e.target.checked;changed()});
 $("fhReset").onclick=()=>{S.b={};fnSet.clear();flSet.clear();msSet.clear();PATHS.forEach(p=>BS[p].goal=0);store.clear();quiet=true;changed();requestAnimationFrame(()=>requestAnimationFrame(()=>quiet=false))};
 window.cityFog={state:()=>({pct:pct(),fns:fnSet.size,flows:flSet.size,on:S.on,glimpsed:PATHS.filter(p=>S.b[p]===0.5).length}),reveal,reset:()=>$("fhReset").click(),open:p=>showFile(p),toggle:on=>{const t=$("fogToggle");if(t.checked!==on){t.checked=on;t.dispatchEvent(new Event("change",{bubbles:true}))}}};
@@ -1248,6 +1263,7 @@ const _showFile=showFile;showFile=function(p,keep){viewing=false;if(!keep)expand
 const _showFn=showFn;showFn=function(p,n,extra){viewing=false;if(!flow.on)expand();const r=_showFn(p,n,extra);files.add(H(p));fns.add(p+"::"+n);if(deadFn(p,n))ghosts.add(p+"::"+n);linkFn(p,n);check();return r};
 const _showDistrict=showDistrict;showDistrict=function(i){viewing=false;expand();return _showDistrict(i)};
 const _isolate=isolate;isolate=function(fi,instant){if(Q.on)return;L.diagram=true;check();return _isolate(fi,instant)};
+const _isolate3D=isolate3D;isolate3D=function(fi){if(!Q.on)return _isolate3D(fi)};  // isolating would point at the answers
 const _showStep=showStep;showStep=function(k){const r=_showStep(k);if(P.fi!==null&&P.k===D.flows[P.fi].steps.length-1&&!Q.on&&!flowsSeen.has(P.fi)){flowsSeen.add(P.fi);check()}return r};
 
 // ---- the quiz: at every step, predict the function that runs next ----
@@ -1350,23 +1366,26 @@ const tourEl=document.createElement("div");tourEl.id="tour";tourEl.hidden=true;
 tourEl.innerHTML=`<div class="tt"><b id="tourT"></b><span id="tourN"></span></div><p id="tourP" role="status"></p><div class="tb"><button type="button" id="tourPause" title="Pause the tour">⏸ Pause</button><button type="button" id="tourSkip" title="Next stop of the tour">Next ▸</button><button type="button" id="tourStop">✕ End tour</button><span class="th">or click anywhere to explore on your own</span></div><i><u id="tourBar"></u></i>`;
 app.appendChild(tourEl);const tbar=$q("tourBar");
 function stops(){const S=[{t:D.repo,p:D.app,go:showCity,ms:7000}],sum=p=>byPath[H(p)]?.summary||"";
-  D.districts.slice(0,8).forEach((d,i)=>S.push({t:`District: ${d.name}`,p:d.summary,go:()=>showDistrict(i),ms:5000}));
+  D.districts.slice(0,8).forEach((d,i)=>S.push({t:`District: ${d.name}`,p:d.summary,go:()=>{showDistrict(i);glow(i)},ms:5000}));
   ENTRY.slice(0,3).forEach(x=>S.push({t:`Front door: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
   MAIN.slice(0,3).forEach(x=>S.push({t:`Main street: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
   flowIdx.filter(fi=>!D.flows[fi].extra).slice(0,2).forEach(fi=>S.push({t:`Walkthrough: ${D.flows[fi].title}`,p:D.flows[fi].desc,flow:fi}));
   S.push({t:"Tour done",p:"Check what stuck: take the “what runs next?” quiz on a flow, and earn the core badges to be ready for your first change.",go:showOnboarding,ms:8000});return S}
+// the district a tour stop talks about glows in its own colour
+const plates=pickables.filter(m=>m.userData.kind==="district"),mats=m=>Array.isArray(m.material)?m.material:[m.material];let lit=null;
+function glow(i){if(lit)mats(lit).forEach(x=>x.emissive?.setHex(0));lit=i==null?null:plates.find(m=>m.userData.i===i);if(lit)mats(lit).forEach(x=>x.emissive?.setHex(COLORS[i%COLORS.length]).multiplyScalar(.45))}
 // time that only runs while the tour plays; Next or End resolve it early
 function hold(ms,run){return new Promise(ok=>{let left=ms,last=performance.now();T.skip=ok;
   const f=()=>{if(run!==T.run)return ok();const now=performance.now();if(!T.paused)left-=now-last;last=now;tbar.style.width=Math.min(100,100*(1-left/ms))+"%";left<=0?ok():setTimeout(f,100)};f()})}
 function ride(fi,run){return new Promise(ok=>{T.skip=ok;startFlow(fi);const f=()=>{if(run!==T.run||P.fi!==fi||P.ended)return ok();
   const N=D.flows[fi].steps.length;tbar.style.width=100*(P.k+1)/N+"%";setTimeout(f,200)};setTimeout(f,400)})}
 function placeTour(){const b=document.getElementById("bar").getBoundingClientRect(),a=app.getBoundingClientRect();tourEl.style.top=(b.bottom-a.top+8)+"px"}
-async function startTour(){if(Q.on)endQuiz();const run=++T.run;T.on=true;T.paused=false;L.toured=true;save();tourEl.hidden=false;setMin(false);renderPause();
+async function startTour(){if(Q.on)endQuiz();const run=++T.run;T.on=true;T.paused=false;tourEl.hidden=false;setMin(false);renderPause();
   const S=stops();for(let i=0;i<S.length&&run===T.run;i++){const s=S[i];placeTour();
     $q("tourT").textContent=s.t;$q("tourN").textContent=`${i+1}/${S.length}`;$q("tourP").textContent=s.p;tbar.style.width="0";
-    if(s.flow!==undefined)await ride(s.flow,run);else{s.go();await hold(s.ms,run)}}
+    glow(null);if(s.flow!==undefined)await ride(s.flow,run);else{s.go();await hold(s.ms,run)}}
   if(run===T.run)stopTour(true)}
-function stopTour(done){T.run++;T.on=false;tourEl.hidden=true;if(!done&&P.playing)pause()}
+function stopTour(done){T.run++;T.on=false;tourEl.hidden=true;glow(null);if(!done&&P.playing)pause()}
 function renderPause(){$q("tourPause").textContent=T.paused?"⏵ Play":"⏸ Pause"}
 $q("tourPause").onclick=()=>{T.paused=!T.paused;renderPause();if(P.fi!==null)T.paused?pause():play()};
 $q("tourSkip").onclick=()=>{if(P.fi!==null)stopFlow();T.paused=false;renderPause();T.skip?.()};
@@ -1381,12 +1400,12 @@ function welcome(){const S=stops(),mins=Math.max(1,Math.round((S.reduce((a,s)=>a
   const dlg=document.createElement("dialog");dlg.id="welcome";dlg.setAttribute("aria-labelledby","wTitle");
   dlg.innerHTML=`<h2 id="wTitle">Welcome to the ${esc(D.repo)} city</h2><p>Every building is a file and every floor a function. New here? The guided tour plays itself in about ${mins} minute${mins===1?"":"s"}: the main areas, where features start, the files everything depends on, and real user actions running through the code.</p>
     <div class="wb"><button type="button" class="primary" id="wStart" autofocus>▶ Start the guided tour</button><button type="button" id="wSkip">I'll explore on my own</button></div><small>You can replay it any time from 🎓 Onboarding.</small>`;
-  app.appendChild(dlg);const done=()=>{L.toured=true;save()};
+  app.appendChild(dlg);const done=()=>{L.welcomed=true;save()};
   dlg.querySelector("#wStart").onclick=()=>{dlg.close();startTour()};dlg.querySelector("#wSkip").onclick=()=>dlg.close();
   dlg.addEventListener("close",()=>{done();dlg.remove()});
   // the city's own Escape handler would otherwise swallow the dialog's
   dlg.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();dlg.close()}});dlg.showModal()}
-if(!D.building){if(location.hash==="#tour")setTimeout(startTour,1200);else if(!L.toured)setTimeout(welcome,900)}
+if(!D.building){if(location.hash==="#tour")setTimeout(startTour,1200);else if(!L.welcomed)setTimeout(welcome,900)}
 window.cityAPI=Object.assign(window.cityAPI||{},{learn:{state:()=>({pct:overall(),won:[...won],badges:BADGES.map(b=>({id:b.id,...prog(b),it:undefined})),quiz:{...Q,answered:[...Q.answered]},min:mini}),
   show:showOnboarding,quiz:startQuiz,tour:startTour}});
 }
