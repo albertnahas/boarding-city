@@ -6,7 +6,7 @@ Boarding City turns a JavaScript/TypeScript repository into a 3D city you can ex
 
 ![The guided tour of the Excalidraw city, at 4× speed](docs/demo.gif)
 
-[Watch the full 3-minute tour (MP4)](docs/demo.mp4)
+[Watch the full 3-minute tour (MP4)](docs/demo.mp4) · [Watch exploring Excalidraw by hand: buildings, floors and the Health layer (40 s, MP4)](docs/explore.mp4)
 
 ## Features
 
@@ -61,7 +61,7 @@ Models are configurable in `.env`. Analysis, layers and verification use no AI a
 
 ## Build a city in the browser
 
-On the hosted app, press **⌘K** (or **＋ Map a repo**), paste any public JS/TS GitHub repo, and press **Estimate**: you see the
+On the hosted app, press **⌘K** (or **＋ Map or switch repo**), paste any public JS/TS GitHub repo, and press **Estimate**: you see the
 source size, the expected time and the cost first. **Build city** starts it in the background. The skyline appears
 within seconds, districts get their names one by one, and each walkthrough becomes playable as soon as it's traced
 and checked. Settings: number of walkthroughs (or your own, like "export as PNG"), models, reasoning effort, max
