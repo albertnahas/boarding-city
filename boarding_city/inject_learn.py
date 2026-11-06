@@ -19,12 +19,13 @@ a.gh{color:var(--acc);text-decoration:none;white-space:nowrap}a.gh:hover{text-de
 #pnlMin:hover{color:var(--ink)}#panel #crumbs{padding-right:30px}
 #panel.min{width:auto;padding:0;background:none;border:0;backdrop-filter:none;overflow:visible}#panel.min #body,#panel.min #crumbs{display:none}
 #panel.min #pnlMin{position:static;width:auto;height:34px;padding:0 12px;font:600 13px system-ui,sans-serif;color:var(--ink);background:#121726e6;border-color:#ffffff26;border-radius:8px}
-@media (min-width:701px){#app:has(#panel:not(.min)) #bar{right:364px}#app:has(#panel.min) #bar{right:130px}}
+@media (min-width:701px){#bar{right:364px}}
 @media (max-width:700px){#panel.min{left:auto;max-height:none}#app.quizzing #nav,#app.quizzing #fogHud{display:none}}
 #learnBtn{background:#1c2335;color:var(--ink);border:1px solid #ffffff1f;font-weight:600}
 #learnBtn b{color:var(--acc);font-variant-numeric:tabular-nums}
 #learnToast{position:absolute;left:50%;top:60px;transform:translate(-50%,-30px);opacity:0;z-index:14;background:#0f1424f5;border:1px solid #fbbf2488;color:#fde68a;padding:9px 16px;border-radius:999px;font:600 13.5px system-ui,sans-serif;transition:.4s;pointer-events:none}
 #learnToast.on{transform:translate(-50%,0);opacity:1}
+@media (max-width:700px){#learnToast{top:auto;bottom:16px}}
 .ob-top{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center;margin:4px 0 12px}
 .ob-ring{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:700 16px system-ui,sans-serif}
 .ob-ring span{width:50px;height:50px;border-radius:50%;background:#121726;display:grid;place-items:center}
@@ -71,7 +72,7 @@ a.gh{color:var(--acc);text-decoration:none;white-space:nowrap}a.gh:hover{text-de
 @keyframes qzShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 @media (max-width:700px){#qzList{bottom:auto;top:calc(100% + 4px)}}
 #tour{position:absolute;z-index:11;left:274px;right:364px;max-width:640px;margin:0 auto;background:#0f1424f2;border:1px solid #5eead466;border-radius:12px;padding:10px 14px 12px;box-shadow:0 10px 30px #0008;backdrop-filter:blur(6px)}
-#tour[hidden]{display:none}#tour .tt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+#tour[hidden]{display:none}#tour.last #tourPause,#tour.last #tourSkip,#tour.last .th,#tour.last i{display:none}#tour .tt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 #tour .tt b{font-size:15px;color:var(--acc)}#tour .tt span{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
 #tour p{margin:4px 0 8px;font-size:14px;line-height:1.45}
 #tour .tb{display:flex;gap:6px;flex-wrap:wrap;align-items:center}#tour .th{font-size:12px;color:var(--mute)}#tour .tb button{padding:4px 10px;font-size:12.5px}
@@ -108,7 +109,7 @@ function linkFn(p,n){const sub=panel.querySelector("h2+.sub"),fn=byPath[p]?.func
 
 // ---- collapsible side panel: tucks away after the overview; opening something new brings it back ----
 const pnl=document.getElementById("panel"),minB=document.createElement("button");minB.id="pnlMin";minB.type="button";pnl.prepend(minB);
-let mini=false;try{mini=localStorage.getItem("bc-panel-min")==="1"}catch{}
+let mini=app.clientWidth<=700;try{const v=localStorage.getItem("bc-panel-min");if(v)mini=v==="1"}catch{}
 function setMin(v){mini=v;pnl.classList.toggle("min",v);minB.textContent=v?"⟨ Panel":"⟩";minB.title=v?"Show the side panel":"Hide the side panel";minB.setAttribute("aria-label",minB.title);
   minB.setAttribute("aria-expanded",String(!v));try{localStorage.setItem("bc-panel-min",v?"1":"0")}catch{}}
 minB.onclick=()=>setMin(!mini);setMin(mini);
@@ -159,7 +160,7 @@ function showOnboarding(){stopFlow();closeBuilding();highlight(null);clearArcs()
   const q=overall(),open=new Set([...panel.querySelectorAll(".ob-badge[open]")].map(d=>d.dataset.id));
   crumb([["City",showCity],["My onboarding"]]);
   panel.innerHTML=`<h2>My onboarding</h2><button type="button" class="primary ob-tour">▶ Play the guided tour</button><div class="ob-top"><div class="ob-ring" style="background:conic-gradient(var(--acc) ${q*3.6}deg,#ffffff14 0)"><span>${q}%</span></div>
-    <div class="sub">${won.size} of ${BADGES.length} badges in ${esc(D.repo)}. ${ready()?"🎓 <b>Ready for your first change.</b> You know where features start, what everything depends on and how the main flows run.":"Earn the 5 core badges to be ready for your first change."}</div></div>`+
+    <div class="sub">${q}% done · ${won.size} of ${BADGES.length} badges earned in ${esc(D.repo)}. ${ready()?"🎓 <b>Ready for your first change.</b> You know where features start, what everything depends on and how the main flows run.":"Earn the 5 core badges to be ready for your first change."}</div></div>`+
     BADGES.map(b=>{const r=prog(b),w=won.has(b.id);
       return `<details class="ob-badge${w?" won":""}" data-id="${b.id}"${open.has(b.id)?" open":""}><summary><span class="ic" aria-hidden="true">${b.ic}</span><span class="t">${esc(b.t)}${CORE.includes(b.id)?' <span class="core">core</span>':""}</span><span class="n">${r.n}/${r.of}${w?" ✓":""}</span><span class="why">${esc(b.why)}</span></summary>
         <div class="ob-bar"><u style="width:${100*r.n/r.of}%"></u></div>${r.it&&r.it.length?`<ul class="ob-items">${r.it.map((x,k)=>`<li class="${x.ok?"ok":""}" data-k="${k}" tabindex="0" role="button"><i>${x.ok?"✓":"○"}</i><span>${esc(x.label)}</span><small>${esc(x.sub||"")}</small></li>`).join("")}</ul>`:""}</details>`}).join("")+
@@ -189,7 +190,7 @@ const _showStep=showStep;showStep=function(k){const r=_showStep(k);if(P.fi!==nul
 const Q={on:false,fi:null,answered:new Map(),pts:0,right:0,hint:false,miss:0,pick:null};
 const ALL=[...new Map(D.files.flatMap(f=>f.cluster?[]:f.functions.map(fn=>[f.path+"::"+fn.name,{n:fn.name,p:f.path}]))
   .concat(D.flows.flatMap(F=>F.steps.map(s=>[s.path+"::"+s.function,{n:s.function,p:s.path}])))).values()];
-ALL.forEach(x=>x.l=x.n.toLowerCase());
+ALL.forEach(x=>{x.l=x.n.toLowerCase();x.f=short(x.p).toLowerCase()});
 const pl=document.getElementById("player"),row=document.getElementById("plRow");
 const qBtn=document.createElement("button");qBtn.id="plQuiz";qBtn.type="button";qBtn.textContent="🎯 Quiz me";qBtn.title="Turn this flow into a quiz: predict each next function";
 row.insertBefore(qBtn,document.getElementById("plClose"));qBtn.onclick=()=>startQuiz(P.fi);
@@ -209,11 +210,11 @@ function hideAhead(){if(!Q.on)return;const F=D.flows[Q.fi],ahead=new Set(F.steps
 setInterval(hideAhead,250);
 function renderScore(){const N=D.flows[Q.fi].steps.length;
   [...$("plTrack").children].forEach((b,k)=>{b.classList.toggle("ahead",k>P.k&&!Q.answered.has(k));b.removeAttribute("title")});
-  $q("qzScore").textContent=`Score ${Q.pts}/${2*Q.answered.size} · ${Q.right} right first try · ${N-1-Q.answered.size} to go`}
+  $q("qzScore").textContent=`${Q.pts} of ${2*Q.answered.size} points (2 per question) · ${Q.right} right first try · ${N-1-Q.answered.size} to go`}
 function renderQ(){const F=D.flows[Q.fi],N=F.steps.length,s=F.steps[P.k],t=target();renderScore();hideAhead();
   if(!open_()){qrow.hidden=true;$q("qzQ").innerHTML=t?`You answered step ${P.k+2} already: press <b>N</b> or click its number on the track to go on.`:"";return finishIfDone()}
   qrow.hidden=false;qin.disabled=false;
-  $q("qzQ").innerHTML=`Step ${P.k+2}/${N}: after <code>${esc(s.function)}()</code>, what runs next? <em>${t.link.startsWith("indirect")?"(reached via an event, callback or state change)":"(a direct call)"}</em>${Q.hint?`<br><em>Hint: it lives in <b>${esc(short(t.path))}</b>, ${esc(D.districts[fileDistrict[H(t.path)]]?.name||"")}</em>`:""}`}
+  $q("qzQ").innerHTML=`Question ${P.k+1} of ${N-1}: after <code>${esc(s.function)}()</code>, what runs next? <em>${t.link.startsWith("indirect")?"(reached via an event, callback or state change)":"(a direct call)"}</em>${Q.hint?`<br><em>Hint: it lives in <b>${esc(short(t.path))}</b>, ${esc(D.districts[fileDistrict[H(t.path)]]?.name||"")}</em>`:""}`}
 function finishIfDone(){const F=D.flows[Q.fi];if(Q.answered.size<F.steps.length-1)return;
   const max=qMax(Q.fi),best=Math.max(qBest(Q.fi),Q.pts);L.quiz[Q.fi]={best,last:Q.pts};delete L.run;flowsSeen.add(Q.fi);check();
   fb(Q.pts>=0.8*max?"ok":Q.pts>=0.5*max?"half":"no",`Quiz done: <b>${Q.pts}/${max}</b>, ${Q.right} of ${F.steps.length-1} right first try. Best ${best}/${max}.`,
@@ -238,7 +239,7 @@ function grade(){if(!open_())return;const t=target(),v=qin.value.trim().replace(
 let hits=[],sel=-1;
 function closeAC(){qlist.hidden=true;qin.setAttribute("aria-expanded","false");sel=-1}
 function ac(){Q.pick=null;const q=qin.value.trim().replace(/\(\)$/,"").toLowerCase();if(!q){hits=[];return closeAC()}
-  hits=ALL.map(x=>[x.l===q?3:x.l.startsWith(q)?2:x.l.includes(q)?1:0,x]).filter(([s])=>s).sort((a,b)=>b[0]-a[0]||a[1].n.length-b[1].n.length).slice(0,8).map(([,x])=>x);
+  hits=ALL.map(x=>[x.l===q?3:x.l.startsWith(q)?2:x.l.includes(q)?1:x.f.includes(q)?0.5:0,x]).filter(([s])=>s).sort((a,b)=>b[0]-a[0]||a[1].n.length-b[1].n.length).slice(0,8).map(([,x])=>x);
   sel=-1;qlist.hidden=!hits.length;qin.setAttribute("aria-expanded",String(!!hits.length));
   qlist.innerHTML=hits.map((x,k)=>`<li id="qz${k}" role="option" aria-selected="false" data-k="${k}">${esc(x.n)}()<span>${esc(short(x.p))}</span></li>`).join("");
   qin.setAttribute("aria-activedescendant","")}
@@ -284,22 +285,29 @@ tourEl.innerHTML=`<div class="tt"><b id="tourT"></b><span id="tourN"></span></di
 app.appendChild(tourEl);const tbar=$q("tourBar");
 function stops(){const S=[{t:D.repo,p:D.app,go:showCity,ms:7000}],sum=p=>byPath[H(p)]?.summary||"";
   D.districts.slice(0,8).forEach((d,i)=>S.push({t:`District: ${d.name}`,p:d.summary,go:()=>{showDistrict(i);glow(i)},ms:5000}));
-  ENTRY.slice(0,3).forEach(x=>S.push({t:`Front door: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
-  MAIN.slice(0,3).forEach(x=>S.push({t:`Main street: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
+  const named=p=>p.split("/").slice(-2).join("/");
+  ENTRY.slice(0,3).forEach(x=>S.push({t:`Front door: ${named(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>visit(H(x.p)),ms:5500}));
+  MAIN.slice(0,3).forEach(x=>S.push({t:`Main street: ${named(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>visit(H(x.p)),ms:5500}));
   flowIdx.filter(fi=>!D.flows[fi].extra).slice(0,2).forEach(fi=>S.push({t:`Walkthrough: ${D.flows[fi].title}`,p:D.flows[fi].desc,flow:fi}));
-  S.push({t:"Tour done",p:"Check what stuck: take the “what runs next?” quiz on a flow, and earn the core badges to be ready for your first change.",go:showOnboarding,ms:8000});return S}
+  S.push({t:"Tour done",p:"Check what stuck: take the “what runs next?” quiz on a flow, and earn the core badges to be ready for your first change.",go:showOnboarding,ms:12000,last:true});return S}
 // the district a tour stop talks about glows in its own colour
 const plates=pickables.filter(m=>m.userData.kind==="district"),mats=m=>Array.isArray(m.material)?m.material:[m.material];let lit=null;
-function glow(i){if(lit)mats(lit).forEach(x=>x.emissive?.setHex(0));lit=i==null?null:plates.find(m=>m.userData.i===i);if(lit)mats(lit).forEach(x=>x.emissive?.setHex(COLORS[i%COLORS.length]).multiplyScalar(.45))}
+let litB=null;const lightB=on=>litB?.group.children.forEach(m=>m.material.emissive.setHex(on?0x2a6f66:0));
+function glow(i){if(lit)mats(lit).forEach(x=>x.emissive?.setHex(0));lit=i==null?null:plates.find(m=>m.userData.i===i);if(lit)mats(lit).forEach(x=>x.emissive?.setHex(COLORS[i%COLORS.length]).multiplyScalar(.45));
+  if(i==null){lightB(false);litB=null}}
+// a file stop: its page in the side panel, the camera outside the building (not inside it) and the building lit up
+function visit(p){const m=mode;mode="tour";showFile(p);mode=m;  // any mode but 3D makes showFile skip opening the building
+  const b=buildings[p];lightB(false);litB=b;lightB(true);fly(new THREE.Vector3(b.x,b.H/2,b.z),Math.max(16,b.H*2.6),0.8,900)}
 // time that only runs while the tour plays; Next or End resolve it early
 function hold(ms,run){return new Promise(ok=>{let left=ms,last=performance.now();T.skip=ok;
   const f=()=>{if(run!==T.run)return ok();const now=performance.now();if(!T.paused)left-=now-last;last=now;tbar.style.width=Math.min(100,100*(1-left/ms))+"%";left<=0?ok():setTimeout(f,100)};f()})}
 function ride(fi,run){return new Promise(ok=>{T.skip=ok;startFlow(fi);const f=()=>{if(run!==T.run||P.fi!==fi||P.ended)return ok();
-  const N=D.flows[fi].steps.length;tbar.style.width=100*(P.k+1)/N+"%";setTimeout(f,200)};setTimeout(f,400)})}
+  const F=D.flows[fi],N=F.steps.length;tbar.style.width=100*(P.k+1)/N+"%";$q("tourP").textContent=`Step ${P.k+1} of ${N}: ${F.steps[P.k].narration}`;setTimeout(f,200)};setTimeout(f,400)})}
 function placeTour(){const b=document.getElementById("bar").getBoundingClientRect(),a=app.getBoundingClientRect();tourEl.style.top=(b.bottom-a.top+8)+"px"}
 async function startTour(){if(Q.on)endQuiz();const run=++T.run;T.on=true;T.paused=false;tourEl.hidden=false;setMin(false);renderPause();
   const S=stops();for(let i=0;i<S.length&&run===T.run;i++){const s=S[i];placeTour();
     $q("tourT").textContent=s.t;$q("tourN").textContent=`${i+1}/${S.length}`;$q("tourP").textContent=s.p;tbar.style.width="0";
+    tourEl.classList.toggle("last",!!s.last);$q("tourStop").textContent=s.last?"Close":"✕ End tour";
     glow(null);if(s.flow!==undefined)await ride(s.flow,run);else{s.go();await hold(s.ms,run)}}
   if(run===T.run)stopTour(true)}
 function stopTour(done){T.run++;T.on=false;tourEl.hidden=true;glow(null);if(!done&&P.playing)pause()}

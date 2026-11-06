@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-nvJ0FpxGbZBHnM+jsum4C1SZJo3BxEYfo2zlWlQbobo=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-0vEL8tKaeldIaATxQ1Iu4vrHDIGXnxTfpFxrQwNtnZ8=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Code City</title>
 <style>
 :root{--bg:#0a0d16;--panel:#121726ee;--ink:#e8ecf5;--mute:#8b93a7;--acc:#5eead4;--flow:#fbbf24}
@@ -8,10 +8,10 @@
 canvas{display:block;width:100%;height:100%}
 #panel{z-index:6;position:absolute;top:12px;right:12px;width:340px;max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid #ffffff14;border-radius:12px;padding:14px 16px;backdrop-filter:blur(6px)}
 #crumbs{font-size:12px;color:var(--mute);margin-bottom:6px}#crumbs a{color:var(--acc);cursor:pointer;text-decoration:none}
-h2{margin:0 0 6px;font-size:18px}.sub{color:var(--mute);font-size:12px}
+h2{margin:0 0 6px;font-size:18px;overflow-wrap:anywhere}.sub{color:var(--mute);font-size:12px}
 .list{margin:10px 0 0;padding:0;list-style:none}.list li{padding:6px 8px;border-radius:6px;cursor:pointer}.list li:hover{background:#ffffff0d}
 .list b{font-weight:600}.list span{display:block;color:var(--mute);font-size:12px}
-pre{background:#05070d;border-radius:8px;padding:8px;font-size:11.5px;overflow:auto;color:#cbd5e1;margin:10px 0 0}
+pre{background:#05070d;border-radius:8px;padding:8px;font-size:11.5px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#cbd5e1;margin:10px 0 0}
 #bar{position:absolute;left:12px;top:12px;display:flex;gap:8px;flex-wrap:wrap;z-index:6}
 button{background:#1c2335;color:var(--ink);border:1px solid #ffffff1f;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
 button.primary{background:var(--flow);color:#1a1300;border:none;font-weight:600}
@@ -19,7 +19,8 @@ button.primary{background:var(--flow);color:#1a1300;border:none;font-weight:600}
 .tag{position:absolute;pointer-events:none;font-size:12px;font-weight:600;padding:2px 7px;border-radius:5px;background:#000a;white-space:nowrap;transform:translate(-50%,-100%)}
 .ftag{transform:translate(0,-50%);font-weight:500;font-size:11.5px;background:#0a0d16cc;border:1px solid #ffffff14}.ftag.on{color:var(--flow)!important;border-color:#fbbf2466;font-weight:600}
 .hoptag{transform:translate(-50%,-50%);font-size:10.5px;font-weight:500;background:#1a1300dd;border:1px dashed #fbbf24aa}
-#backBtn[hidden],#iso3Exit[hidden]{display:none}
+#backBtn[hidden],#iso3Exit[hidden]{display:none}#bar:has(#backBtn:not([hidden])) #homeBtn{display:none}
+.tag.occl{opacity:0}
 #app.iso3 .tag:not(.mtag):not(.ftag):not(.hoptag){visibility:hidden!important}
 #paper{position:absolute;inset:0;z-index:14;background:#05070dcc;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}#paper[hidden]{display:none}
 #paper .sheet{position:relative;width:min(920px,100%);max-height:100%;overflow:auto;background:#f3eee1;color:#1f1b16;border-radius:4px;padding:22px 26px;box-shadow:0 20px 60px #000c;font:15px/1.45 Georgia,"Times New Roman",serif}
@@ -88,7 +89,7 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 #fogHud{position:absolute;left:12px;top:58px;z-index:6;width:250px;background:var(--panel);border:1px solid #ffffff14;border-radius:12px;padding:9px 12px;font-size:12px;backdrop-filter:blur(6px)}
 #fogHud[hidden]{display:none}
 #fogHud .fh-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-#fogHud .fh-btns{display:flex;gap:4px}#fogHud.min .fh-d,#fogHud.min .fh-meta{display:none}
+#fogHud .fh-btns{display:flex;gap:4px}#fogHud #fhMin{font-size:13px;padding:1px 9px;line-height:1.2}#fogHud.min .fh-d,#fogHud.min .fh-meta{display:none}
 #fogHud .fh-top b{font-size:13.5px}#fogHud .fh-top b span{color:var(--acc)}
 #fogHud button{background:transparent;border:1px solid #ffffff2a;color:var(--mute);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer}
 #fogHud .fh-d{display:grid;grid-template-columns:1fr 34px;gap:2px 8px;margin-top:7px;align-items:center}
@@ -153,12 +154,13 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 #pnlMin:hover{color:var(--ink)}#panel #crumbs{padding-right:30px}
 #panel.min{width:auto;padding:0;background:none;border:0;backdrop-filter:none;overflow:visible}#panel.min #body,#panel.min #crumbs{display:none}
 #panel.min #pnlMin{position:static;width:auto;height:34px;padding:0 12px;font:600 13px system-ui,sans-serif;color:var(--ink);background:#121726e6;border-color:#ffffff26;border-radius:8px}
-@media (min-width:701px){#app:has(#panel:not(.min)) #bar{right:364px}#app:has(#panel.min) #bar{right:130px}}
+@media (min-width:701px){#bar{right:364px}}
 @media (max-width:700px){#panel.min{left:auto;max-height:none}#app.quizzing #nav,#app.quizzing #fogHud{display:none}}
 #learnBtn{background:#1c2335;color:var(--ink);border:1px solid #ffffff1f;font-weight:600}
 #learnBtn b{color:var(--acc);font-variant-numeric:tabular-nums}
 #learnToast{position:absolute;left:50%;top:60px;transform:translate(-50%,-30px);opacity:0;z-index:14;background:#0f1424f5;border:1px solid #fbbf2488;color:#fde68a;padding:9px 16px;border-radius:999px;font:600 13.5px system-ui,sans-serif;transition:.4s;pointer-events:none}
 #learnToast.on{transform:translate(-50%,0);opacity:1}
+@media (max-width:700px){#learnToast{top:auto;bottom:16px}}
 .ob-top{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:center;margin:4px 0 12px}
 .ob-ring{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:700 16px system-ui,sans-serif}
 .ob-ring span{width:50px;height:50px;border-radius:50%;background:#121726;display:grid;place-items:center}
@@ -205,7 +207,7 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 @keyframes qzShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 @media (max-width:700px){#qzList{bottom:auto;top:calc(100% + 4px)}}
 #tour{position:absolute;z-index:11;left:274px;right:364px;max-width:640px;margin:0 auto;background:#0f1424f2;border:1px solid #5eead466;border-radius:12px;padding:10px 14px 12px;box-shadow:0 10px 30px #0008;backdrop-filter:blur(6px)}
-#tour[hidden]{display:none}#tour .tt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+#tour[hidden]{display:none}#tour.last #tourPause,#tour.last #tourSkip,#tour.last .th,#tour.last i{display:none}#tour .tt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 #tour .tt b{font-size:15px;color:var(--acc)}#tour .tt span{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
 #tour p{margin:4px 0 8px;font-size:14px;line-height:1.45}
 #tour .tb{display:flex;gap:6px;flex-wrap:wrap;align-items:center}#tour .th{font-size:12px;color:var(--mute)}#tour .tb button{padding:4px 10px;font-size:12.5px}
@@ -221,7 +223,7 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 .hl-why{color:var(--mute);font-size:12px;margin:0 0 6px}
 .hl-list li b{color:var(--ink)}
 .hl-ok{color:#6ee7b7;font-size:12.5px}/* /health-css */</style></head><body>
-<div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D diagram</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button><button id="iso3Exit" hidden>✕ Show the whole city</button></div><div id="hover"></div><!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><span class="fh-btns"><button id="fhReset" title="Hide everything again">Reset fog</button><button id="fhMin" aria-expanded="true" title="Collapse">▴</button></span></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->
+<div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D map</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button><button id="iso3Exit" hidden>✕ Show the whole city</button></div><div id="hover"></div><!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><span class="fh-btns"><button id="fhReset" title="Hide everything again">Reset</button><button id="fhMin" aria-expanded="true" title="Collapse">▴</button></span></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->
 <div id="paper" hidden role="dialog" aria-modal="true" aria-label="The Daily Commit"><article class="sheet"><button id="paperClose" aria-label="Close the paper">✕</button>
 <header><div class="ears"><span id="paperEarL"></span><span>Price: zero bugs</span></div><h1>The Daily Commit</h1><div class="dateline" id="paperDate"></div></header><div id="paperBody"></div>
 <footer>Every number is computed from the source by static analysis; the jokes are written by AI. Unreached code may still run dynamically.</footer></article></div>
@@ -648,7 +650,7 @@ function placePlayer(){const ar=app.getBoundingClientRect(),band=ar.bottom-140;l
   if(narrow){
     // phones: one stack under the top bar: the Layers chip and any add-on panel marked data-dock="top" first (small),
     // then the player and its steps list, which stops above the first panel or control lower on the screen
-    let y=$("bar").getBoundingClientRect().bottom-ar.top+6;const put=(el,st)=>Object.assign(el.style,{bottom:"auto",...st});
+    let y=$(iso.fi!==null?"isoBar":"bar").getBoundingClientRect().bottom-ar.top+6;const put=(el,st)=>Object.assign(el.style,{bottom:"auto",...st});
     const lay=dock[0];put(lay,{top:y+"px"});let x=8,rowH=lay.offsetHeight;if(lay.open){y+=lay.offsetHeight+6;rowH=0}else x+=lay.offsetWidth+8;
     dock.slice(1).forEach(el=>{if(el.hidden)return;put(el,{top:y+"px",left:x+"px",right:"auto"});x+=el.offsetWidth+8;rowH=Math.max(rowH,el.offsetHeight)});y+=rowH+6;
     if(!plBar.hidden){put(plBar,{top:y+"px",left:"8px",right:"8px"});y+=plBar.offsetHeight+6;if(!plList.hidden){
@@ -747,8 +749,8 @@ async function to2D(){if(mode!=="3d")return;await unisolate3D();controls.enableD
     two.list.forEach((n,i)=>{n.mesh.position.lerpVectors(start[i],n.pos,b);n.mesh.scale.x=0.25+0.75*b;n.mesh.material.opacity=Math.min(1,b*1.6)});
     two.boxes.forEach(x=>x.mesh.material.opacity=0.85*b);camera.fov=fov0+(FOV2-fov0)*e;camera.updateProjectionMatrix()});
   cityGroups.forEach(g=>g.visible=false);baseEdges();mode="2d";controls.enableRotate=false;controls.enableDamping=false;controls.autoRotate=false;controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};controls.maxDistance=Infinity;
-  set2DFlow(P.fi??lastFi);crumb([["City",showCity],["2D diagram"]]);P.fi!==null?showStep(P.k):showGallery()}
-async function to3D(){if(mode!=="2d")return;hoverEl.style.display="none";pause();clear2DFlow();dropTags(two.baseTags);two.objs.forEach(o=>scene.remove(o));two.objs=[];mode="morph";modeBtn.textContent="2D diagram";modeBtn.classList.remove("on");
+  set2DFlow(P.fi??lastFi);crumb([["City",showCity],["2D map"]]);P.fi!==null?showStep(P.k):showGallery()}
+async function to3D(){if(mode!=="2d")return;hoverEl.style.display="none";pause();clear2DFlow();dropTags(two.baseTags);two.objs.forEach(o=>scene.remove(o));two.objs=[];mode="morph";modeBtn.textContent="2D map";modeBtn.classList.remove("on");
   const fl=allFloors(),pl=plates.flatMap(mats),end=two.list.map(n=>{const v=new THREE.Vector3();(floors[n.path][n.name]||Object.values(floors[n.path])[0]).getWorldPosition(v);return v}),fov0=camera.fov;
   cityGroups.forEach(g=>g.visible=true);controls.enableRotate=true;controls.enableDamping=true;controls.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};controls.maxDistance=EXT*2.2;
   fly(CITY,CITYD,1.1,1200);
@@ -903,6 +905,9 @@ renderer.setAnimationLoop(now=>{stepTweens(now);
   const w=app.clientWidth,h=app.clientHeight;
   if(mode!=="3d"){const ppu=h/(2*Math.max(1e-3,camH())*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));app.style.setProperty("--pill",Math.max(24,NW*ppu)+"px");app.style.setProperty("--box",Math.max(24,CW*0.86*ppu)+"px")}
   const cr=camRight();tags.forEach(t=>{if(t.fl){t.fl.getWorldPosition(t.pos);t.pos.addScaledVector(cr,t.hw)}v.copy(t.pos).project(camera);const vis=v.z<1&&Math.abs(v.x)<1.1&&Math.abs(v.y)<1.1&&!(t.city&&(open.path||mode!=="3d"||close))&&!(t.layer&&(!ON[t.layer]||mode!=="3d"||open.path))&&!(t.metro&&open.path);t.el.style.display=vis?"":"none";t.el.style.left=(v.x+1)/2*w+"px";t.el.style.top=(1-v.y)/2*h+"px"})});
+// labels that would overlap one placed earlier are hidden for now (district names are placed first)
+setInterval(()=>{const shown=[];for(const t of tags){const e=t.el;if(e.style.display==="none"||e.style.visibility==="hidden"||e.classList.contains("mtag")||e.classList.contains("ftag")){e.classList.remove("occl");continue}
+  const r=e.getBoundingClientRect(),hit=shown.some(q=>r.left<q.right&&r.right>q.left&&r.top<q.bottom&&r.bottom>q.top);e.classList.toggle("occl",hit);if(!hit)shown.push(r)}},250);
 
 /* ==== FOG-POC: fog of war (removable, see inject_fog.py) ==== */
 {
@@ -1101,14 +1106,14 @@ function key(k){k=String(k).toLowerCase();
   if(k==="2"){if(view()!=="iso")modeBtn.click();return true}
   if(k==="i"){extract();return true}
   if(k==="escape"){if(!help.hidden)toggleHelp(false);else if(!isoModal.hidden)document.getElementById("mClose")?.click();else if(!isoEl.hidden)document.getElementById("isoBack").click();
-    else if(flow.on){stopFlow();showGallery()}else if(!open.path&&mode==="3d")showCity();return true}
+    else if(flow.on){stopFlow();if(mode==="2d")clear2DFlow();showGallery()}else if(mode==="2d")modeBtn.click();else if(!open.path&&mode==="3d")showCity();return true}
   return false}
 addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
   if(e.key==="Escape"&&open.path)return; // the city's own handler closes an open building
   if(key(e.key))e.preventDefault()});
 // ---- extract a flow as a diagram: a toolbar button, the I key, and a one-time hint after the first walkthrough ----
 const xBtn=document.getElementById("extractBtn")||document.createElement("button");
-if(!xBtn.isConnected){xBtn.id="extractBtn";xBtn.type="button";xBtn.innerHTML="⧉ Extract flow as diagram";xBtn.title="Extract the selected flow as a 2D diagram (I)";
+if(!xBtn.isConnected){xBtn.id="extractBtn";xBtn.type="button";xBtn.innerHTML="⧉ Flow diagram";xBtn.title="Extract the selected flow as a 2D diagram (I)";
   const bar=document.getElementById("bar");if(bar)bar.insertBefore(xBtn,document.getElementById("modeBtn"));}
 let lastFi=null,hinted=false;try{hinted=localStorage.getItem("bc-extract-hint")==="1"}catch{}
 const toast=document.createElement("button");toast.id="xToast";toast.type="button";toast.hidden=true;toast.textContent="Extract this flow as a diagram ⧉";app.appendChild(toast);
@@ -1194,7 +1199,7 @@ function linkFn(p,n){const sub=panel.querySelector("h2+.sub"),fn=byPath[p]?.func
 
 // ---- collapsible side panel: tucks away after the overview; opening something new brings it back ----
 const pnl=document.getElementById("panel"),minB=document.createElement("button");minB.id="pnlMin";minB.type="button";pnl.prepend(minB);
-let mini=false;try{mini=localStorage.getItem("bc-panel-min")==="1"}catch{}
+let mini=app.clientWidth<=700;try{const v=localStorage.getItem("bc-panel-min");if(v)mini=v==="1"}catch{}
 function setMin(v){mini=v;pnl.classList.toggle("min",v);minB.textContent=v?"⟨ Panel":"⟩";minB.title=v?"Show the side panel":"Hide the side panel";minB.setAttribute("aria-label",minB.title);
   minB.setAttribute("aria-expanded",String(!v));try{localStorage.setItem("bc-panel-min",v?"1":"0")}catch{}}
 minB.onclick=()=>setMin(!mini);setMin(mini);
@@ -1245,7 +1250,7 @@ function showOnboarding(){stopFlow();closeBuilding();highlight(null);clearArcs()
   const q=overall(),open=new Set([...panel.querySelectorAll(".ob-badge[open]")].map(d=>d.dataset.id));
   crumb([["City",showCity],["My onboarding"]]);
   panel.innerHTML=`<h2>My onboarding</h2><button type="button" class="primary ob-tour">▶ Play the guided tour</button><div class="ob-top"><div class="ob-ring" style="background:conic-gradient(var(--acc) ${q*3.6}deg,#ffffff14 0)"><span>${q}%</span></div>
-    <div class="sub">${won.size} of ${BADGES.length} badges in ${esc(D.repo)}. ${ready()?"🎓 <b>Ready for your first change.</b> You know where features start, what everything depends on and how the main flows run.":"Earn the 5 core badges to be ready for your first change."}</div></div>`+
+    <div class="sub">${q}% done · ${won.size} of ${BADGES.length} badges earned in ${esc(D.repo)}. ${ready()?"🎓 <b>Ready for your first change.</b> You know where features start, what everything depends on and how the main flows run.":"Earn the 5 core badges to be ready for your first change."}</div></div>`+
     BADGES.map(b=>{const r=prog(b),w=won.has(b.id);
       return `<details class="ob-badge${w?" won":""}" data-id="${b.id}"${open.has(b.id)?" open":""}><summary><span class="ic" aria-hidden="true">${b.ic}</span><span class="t">${esc(b.t)}${CORE.includes(b.id)?' <span class="core">core</span>':""}</span><span class="n">${r.n}/${r.of}${w?" ✓":""}</span><span class="why">${esc(b.why)}</span></summary>
         <div class="ob-bar"><u style="width:${100*r.n/r.of}%"></u></div>${r.it&&r.it.length?`<ul class="ob-items">${r.it.map((x,k)=>`<li class="${x.ok?"ok":""}" data-k="${k}" tabindex="0" role="button"><i>${x.ok?"✓":"○"}</i><span>${esc(x.label)}</span><small>${esc(x.sub||"")}</small></li>`).join("")}</ul>`:""}</details>`}).join("")+
@@ -1275,7 +1280,7 @@ const _showStep=showStep;showStep=function(k){const r=_showStep(k);if(P.fi!==nul
 const Q={on:false,fi:null,answered:new Map(),pts:0,right:0,hint:false,miss:0,pick:null};
 const ALL=[...new Map(D.files.flatMap(f=>f.cluster?[]:f.functions.map(fn=>[f.path+"::"+fn.name,{n:fn.name,p:f.path}]))
   .concat(D.flows.flatMap(F=>F.steps.map(s=>[s.path+"::"+s.function,{n:s.function,p:s.path}])))).values()];
-ALL.forEach(x=>x.l=x.n.toLowerCase());
+ALL.forEach(x=>{x.l=x.n.toLowerCase();x.f=short(x.p).toLowerCase()});
 const pl=document.getElementById("player"),row=document.getElementById("plRow");
 const qBtn=document.createElement("button");qBtn.id="plQuiz";qBtn.type="button";qBtn.textContent="🎯 Quiz me";qBtn.title="Turn this flow into a quiz: predict each next function";
 row.insertBefore(qBtn,document.getElementById("plClose"));qBtn.onclick=()=>startQuiz(P.fi);
@@ -1295,11 +1300,11 @@ function hideAhead(){if(!Q.on)return;const F=D.flows[Q.fi],ahead=new Set(F.steps
 setInterval(hideAhead,250);
 function renderScore(){const N=D.flows[Q.fi].steps.length;
   [...$("plTrack").children].forEach((b,k)=>{b.classList.toggle("ahead",k>P.k&&!Q.answered.has(k));b.removeAttribute("title")});
-  $q("qzScore").textContent=`Score ${Q.pts}/${2*Q.answered.size} · ${Q.right} right first try · ${N-1-Q.answered.size} to go`}
+  $q("qzScore").textContent=`${Q.pts} of ${2*Q.answered.size} points (2 per question) · ${Q.right} right first try · ${N-1-Q.answered.size} to go`}
 function renderQ(){const F=D.flows[Q.fi],N=F.steps.length,s=F.steps[P.k],t=target();renderScore();hideAhead();
   if(!open_()){qrow.hidden=true;$q("qzQ").innerHTML=t?`You answered step ${P.k+2} already: press <b>N</b> or click its number on the track to go on.`:"";return finishIfDone()}
   qrow.hidden=false;qin.disabled=false;
-  $q("qzQ").innerHTML=`Step ${P.k+2}/${N}: after <code>${esc(s.function)}()</code>, what runs next? <em>${t.link.startsWith("indirect")?"(reached via an event, callback or state change)":"(a direct call)"}</em>${Q.hint?`<br><em>Hint: it lives in <b>${esc(short(t.path))}</b>, ${esc(D.districts[fileDistrict[H(t.path)]]?.name||"")}</em>`:""}`}
+  $q("qzQ").innerHTML=`Question ${P.k+1} of ${N-1}: after <code>${esc(s.function)}()</code>, what runs next? <em>${t.link.startsWith("indirect")?"(reached via an event, callback or state change)":"(a direct call)"}</em>${Q.hint?`<br><em>Hint: it lives in <b>${esc(short(t.path))}</b>, ${esc(D.districts[fileDistrict[H(t.path)]]?.name||"")}</em>`:""}`}
 function finishIfDone(){const F=D.flows[Q.fi];if(Q.answered.size<F.steps.length-1)return;
   const max=qMax(Q.fi),best=Math.max(qBest(Q.fi),Q.pts);L.quiz[Q.fi]={best,last:Q.pts};delete L.run;flowsSeen.add(Q.fi);check();
   fb(Q.pts>=0.8*max?"ok":Q.pts>=0.5*max?"half":"no",`Quiz done: <b>${Q.pts}/${max}</b>, ${Q.right} of ${F.steps.length-1} right first try. Best ${best}/${max}.`,
@@ -1324,7 +1329,7 @@ function grade(){if(!open_())return;const t=target(),v=qin.value.trim().replace(
 let hits=[],sel=-1;
 function closeAC(){qlist.hidden=true;qin.setAttribute("aria-expanded","false");sel=-1}
 function ac(){Q.pick=null;const q=qin.value.trim().replace(/\(\)$/,"").toLowerCase();if(!q){hits=[];return closeAC()}
-  hits=ALL.map(x=>[x.l===q?3:x.l.startsWith(q)?2:x.l.includes(q)?1:0,x]).filter(([s])=>s).sort((a,b)=>b[0]-a[0]||a[1].n.length-b[1].n.length).slice(0,8).map(([,x])=>x);
+  hits=ALL.map(x=>[x.l===q?3:x.l.startsWith(q)?2:x.l.includes(q)?1:x.f.includes(q)?0.5:0,x]).filter(([s])=>s).sort((a,b)=>b[0]-a[0]||a[1].n.length-b[1].n.length).slice(0,8).map(([,x])=>x);
   sel=-1;qlist.hidden=!hits.length;qin.setAttribute("aria-expanded",String(!!hits.length));
   qlist.innerHTML=hits.map((x,k)=>`<li id="qz${k}" role="option" aria-selected="false" data-k="${k}">${esc(x.n)}()<span>${esc(short(x.p))}</span></li>`).join("");
   qin.setAttribute("aria-activedescendant","")}
@@ -1370,22 +1375,29 @@ tourEl.innerHTML=`<div class="tt"><b id="tourT"></b><span id="tourN"></span></di
 app.appendChild(tourEl);const tbar=$q("tourBar");
 function stops(){const S=[{t:D.repo,p:D.app,go:showCity,ms:7000}],sum=p=>byPath[H(p)]?.summary||"";
   D.districts.slice(0,8).forEach((d,i)=>S.push({t:`District: ${d.name}`,p:d.summary,go:()=>{showDistrict(i);glow(i)},ms:5000}));
-  ENTRY.slice(0,3).forEach(x=>S.push({t:`Front door: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
-  MAIN.slice(0,3).forEach(x=>S.push({t:`Main street: ${short(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>showFile(H(x.p)),ms:5500}));
+  const named=p=>p.split("/").slice(-2).join("/");
+  ENTRY.slice(0,3).forEach(x=>S.push({t:`Front door: ${named(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>visit(H(x.p)),ms:5500}));
+  MAIN.slice(0,3).forEach(x=>S.push({t:`Main street: ${named(x.p)}`,p:`${sum(x.p)} (${x.sub}.)`,go:()=>visit(H(x.p)),ms:5500}));
   flowIdx.filter(fi=>!D.flows[fi].extra).slice(0,2).forEach(fi=>S.push({t:`Walkthrough: ${D.flows[fi].title}`,p:D.flows[fi].desc,flow:fi}));
-  S.push({t:"Tour done",p:"Check what stuck: take the “what runs next?” quiz on a flow, and earn the core badges to be ready for your first change.",go:showOnboarding,ms:8000});return S}
+  S.push({t:"Tour done",p:"Check what stuck: take the “what runs next?” quiz on a flow, and earn the core badges to be ready for your first change.",go:showOnboarding,ms:12000,last:true});return S}
 // the district a tour stop talks about glows in its own colour
 const plates=pickables.filter(m=>m.userData.kind==="district"),mats=m=>Array.isArray(m.material)?m.material:[m.material];let lit=null;
-function glow(i){if(lit)mats(lit).forEach(x=>x.emissive?.setHex(0));lit=i==null?null:plates.find(m=>m.userData.i===i);if(lit)mats(lit).forEach(x=>x.emissive?.setHex(COLORS[i%COLORS.length]).multiplyScalar(.45))}
+let litB=null;const lightB=on=>litB?.group.children.forEach(m=>m.material.emissive.setHex(on?0x2a6f66:0));
+function glow(i){if(lit)mats(lit).forEach(x=>x.emissive?.setHex(0));lit=i==null?null:plates.find(m=>m.userData.i===i);if(lit)mats(lit).forEach(x=>x.emissive?.setHex(COLORS[i%COLORS.length]).multiplyScalar(.45));
+  if(i==null){lightB(false);litB=null}}
+// a file stop: its page in the side panel, the camera outside the building (not inside it) and the building lit up
+function visit(p){const m=mode;mode="tour";showFile(p);mode=m;  // any mode but 3D makes showFile skip opening the building
+  const b=buildings[p];lightB(false);litB=b;lightB(true);fly(new THREE.Vector3(b.x,b.H/2,b.z),Math.max(16,b.H*2.6),0.8,900)}
 // time that only runs while the tour plays; Next or End resolve it early
 function hold(ms,run){return new Promise(ok=>{let left=ms,last=performance.now();T.skip=ok;
   const f=()=>{if(run!==T.run)return ok();const now=performance.now();if(!T.paused)left-=now-last;last=now;tbar.style.width=Math.min(100,100*(1-left/ms))+"%";left<=0?ok():setTimeout(f,100)};f()})}
 function ride(fi,run){return new Promise(ok=>{T.skip=ok;startFlow(fi);const f=()=>{if(run!==T.run||P.fi!==fi||P.ended)return ok();
-  const N=D.flows[fi].steps.length;tbar.style.width=100*(P.k+1)/N+"%";setTimeout(f,200)};setTimeout(f,400)})}
+  const F=D.flows[fi],N=F.steps.length;tbar.style.width=100*(P.k+1)/N+"%";$q("tourP").textContent=`Step ${P.k+1} of ${N}: ${F.steps[P.k].narration}`;setTimeout(f,200)};setTimeout(f,400)})}
 function placeTour(){const b=document.getElementById("bar").getBoundingClientRect(),a=app.getBoundingClientRect();tourEl.style.top=(b.bottom-a.top+8)+"px"}
 async function startTour(){if(Q.on)endQuiz();const run=++T.run;T.on=true;T.paused=false;tourEl.hidden=false;setMin(false);renderPause();
   const S=stops();for(let i=0;i<S.length&&run===T.run;i++){const s=S[i];placeTour();
     $q("tourT").textContent=s.t;$q("tourN").textContent=`${i+1}/${S.length}`;$q("tourP").textContent=s.p;tbar.style.width="0";
+    tourEl.classList.toggle("last",!!s.last);$q("tourStop").textContent=s.last?"Close":"✕ End tour";
     glow(null);if(s.flow!==undefined)await ride(s.flow,run);else{s.go();await hold(s.ms,run)}}
   if(run===T.run)stopTour(true)}
 function stopTour(done){T.run++;T.on=false;tourEl.hidden=true;glow(null);if(!done&&P.playing)pause()}

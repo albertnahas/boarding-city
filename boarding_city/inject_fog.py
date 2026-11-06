@@ -11,7 +11,7 @@ CSS = """
 #fogHud{position:absolute;left:12px;top:58px;z-index:6;width:250px;background:var(--panel);border:1px solid #ffffff14;border-radius:12px;padding:9px 12px;font-size:12px;backdrop-filter:blur(6px)}
 #fogHud[hidden]{display:none}
 #fogHud .fh-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-#fogHud .fh-btns{display:flex;gap:4px}#fogHud.min .fh-d,#fogHud.min .fh-meta{display:none}
+#fogHud .fh-btns{display:flex;gap:4px}#fogHud #fhMin{font-size:13px;padding:1px 9px;line-height:1.2}#fogHud.min .fh-d,#fogHud.min .fh-meta{display:none}
 #fogHud .fh-top b{font-size:13.5px}#fogHud .fh-top b span{color:var(--acc)}
 #fogHud button{background:transparent;border:1px solid #ffffff2a;color:var(--mute);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer}
 #fogHud .fh-d{display:grid;grid-template-columns:1fr 34px;gap:2px 8px;margin-top:7px;align-items:center}
@@ -32,7 +32,7 @@ CSS = """
 /* /FOG-POC */
 """
 
-HTML = '<!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><span class="fh-btns"><button id="fhReset" title="Hide everything again">Reset fog</button><button id="fhMin" aria-expanded="true" title="Collapse">▴</button></span></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->'
+HTML = '<!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><span class="fh-btns"><button id="fhReset" title="Hide everything again">Reset</button><button id="fhMin" aria-expanded="true" title="Collapse">▴</button></span></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->'
 
 JS = r"""
 /* ==== FOG-POC: fog of war (removable, see inject_fog.py) ==== */

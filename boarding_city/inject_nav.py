@@ -116,14 +116,14 @@ function key(k){k=String(k).toLowerCase();
   if(k==="2"){if(view()!=="iso")modeBtn.click();return true}
   if(k==="i"){extract();return true}
   if(k==="escape"){if(!help.hidden)toggleHelp(false);else if(!isoModal.hidden)document.getElementById("mClose")?.click();else if(!isoEl.hidden)document.getElementById("isoBack").click();
-    else if(flow.on){stopFlow();showGallery()}else if(!open.path&&mode==="3d")showCity();return true}
+    else if(flow.on){stopFlow();if(mode==="2d")clear2DFlow();showGallery()}else if(mode==="2d")modeBtn.click();else if(!open.path&&mode==="3d")showCity();return true}
   return false}
 addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
   if(e.key==="Escape"&&open.path)return; // the city's own handler closes an open building
   if(key(e.key))e.preventDefault()});
 // ---- extract a flow as a diagram: a toolbar button, the I key, and a one-time hint after the first walkthrough ----
 const xBtn=document.getElementById("extractBtn")||document.createElement("button");
-if(!xBtn.isConnected){xBtn.id="extractBtn";xBtn.type="button";xBtn.innerHTML="⧉ Extract flow as diagram";xBtn.title="Extract the selected flow as a 2D diagram (I)";
+if(!xBtn.isConnected){xBtn.id="extractBtn";xBtn.type="button";xBtn.innerHTML="⧉ Flow diagram";xBtn.title="Extract the selected flow as a 2D diagram (I)";
   const bar=document.getElementById("bar");if(bar)bar.insertBefore(xBtn,document.getElementById("modeBtn"));}
 let lastFi=null,hinted=false;try{hinted=localStorage.getItem("bc-extract-hint")==="1"}catch{}
 const toast=document.createElement("button");toast.id="xToast";toast.type="button";toast.hidden=true;toast.textContent="Extract this flow as a diagram ⧉";app.appendChild(toast);

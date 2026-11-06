@@ -8,10 +8,10 @@
 canvas{display:block;width:100%;height:100%}
 #panel{z-index:6;position:absolute;top:12px;right:12px;width:340px;max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid #ffffff14;border-radius:12px;padding:14px 16px;backdrop-filter:blur(6px)}
 #crumbs{font-size:12px;color:var(--mute);margin-bottom:6px}#crumbs a{color:var(--acc);cursor:pointer;text-decoration:none}
-h2{margin:0 0 6px;font-size:18px}.sub{color:var(--mute);font-size:12px}
+h2{margin:0 0 6px;font-size:18px;overflow-wrap:anywhere}.sub{color:var(--mute);font-size:12px}
 .list{margin:10px 0 0;padding:0;list-style:none}.list li{padding:6px 8px;border-radius:6px;cursor:pointer}.list li:hover{background:#ffffff0d}
 .list b{font-weight:600}.list span{display:block;color:var(--mute);font-size:12px}
-pre{background:#05070d;border-radius:8px;padding:8px;font-size:11.5px;overflow:auto;color:#cbd5e1;margin:10px 0 0}
+pre{background:#05070d;border-radius:8px;padding:8px;font-size:11.5px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#cbd5e1;margin:10px 0 0}
 #bar{position:absolute;left:12px;top:12px;display:flex;gap:8px;flex-wrap:wrap;z-index:6}
 button{background:#1c2335;color:var(--ink);border:1px solid #ffffff1f;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
 button.primary{background:var(--flow);color:#1a1300;border:none;font-weight:600}
@@ -19,7 +19,8 @@ button.primary{background:var(--flow);color:#1a1300;border:none;font-weight:600}
 .tag{position:absolute;pointer-events:none;font-size:12px;font-weight:600;padding:2px 7px;border-radius:5px;background:#000a;white-space:nowrap;transform:translate(-50%,-100%)}
 .ftag{transform:translate(0,-50%);font-weight:500;font-size:11.5px;background:#0a0d16cc;border:1px solid #ffffff14}.ftag.on{color:var(--flow)!important;border-color:#fbbf2466;font-weight:600}
 .hoptag{transform:translate(-50%,-50%);font-size:10.5px;font-weight:500;background:#1a1300dd;border:1px dashed #fbbf24aa}
-#backBtn[hidden],#iso3Exit[hidden]{display:none}
+#backBtn[hidden],#iso3Exit[hidden]{display:none}#bar:has(#backBtn:not([hidden])) #homeBtn{display:none}
+.tag.occl{opacity:0}
 #app.iso3 .tag:not(.mtag):not(.ftag):not(.hoptag){visibility:hidden!important}
 #paper{position:absolute;inset:0;z-index:14;background:#05070dcc;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}#paper[hidden]{display:none}
 #paper .sheet{position:relative;width:min(920px,100%);max-height:100%;overflow:auto;background:#f3eee1;color:#1f1b16;border-radius:4px;padding:22px 26px;box-shadow:0 20px 60px #000c;font:15px/1.45 Georgia,"Times New Roman",serif}
@@ -84,7 +85,7 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 #hover{position:absolute;pointer-events:none;font-size:12px;padding:3px 8px;border-radius:6px;background:#000c;border:1px solid #ffffff22;white-space:nowrap;transform:translate(12px,-50%);display:none;z-index:5}
 @media (max-width:700px){#panel{top:auto;bottom:8px;left:8px;right:8px;width:auto;max-height:42%}#bar{left:8px;top:8px}}
 </style></head><body>
-<div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D diagram</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button><button id="iso3Exit" hidden>✕ Show the whole city</button></div><div id="hover"></div>
+<div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D map</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button><button id="iso3Exit" hidden>✕ Show the whole city</button></div><div id="hover"></div>
 <div id="paper" hidden role="dialog" aria-modal="true" aria-label="The Daily Commit"><article class="sheet"><button id="paperClose" aria-label="Close the paper">✕</button>
 <header><div class="ears"><span id="paperEarL"></span><span>Price: zero bugs</span></div><h1>The Daily Commit</h1><div class="dateline" id="paperDate"></div></header><div id="paperBody"></div>
 <footer>Every number is computed from the source by static analysis; the jokes are written by AI. Unreached code may still run dynamically.</footer></article></div>
@@ -439,7 +440,9 @@ function showGallery(){if(!flow.on)highlight(null);crumb([["City",showCity],["Fl
   const item=fi=>{const F=D.flows[fi],fs=[...new Set(F.steps.map(s=>short(s.path)))];
     return `<li class="flowitem" data-fi="${fi}"><b>▶ ${esc(F.title)}</b><span>${esc(F.desc)}</span><span class="files">${F.steps.length} steps · ${fs.length} files: ${esc(fs.join(", "))}</span>${isoBtn(fi)}</li>`};
   const g=D.flows.map((F,i)=>i).filter(i=>!D.flows[i].extra),x=D.flows.map((F,i)=>i).filter(i=>D.flows[i].extra);
-  panel.innerHTML=`<h2>Flow gallery</h2><div class="sub">${g.length} user actions traced through the code by AI, each step checked against the source. ${M_ACT} user actions detected in total.</div><ul class="list">${g.map(item).join("")}</ul>
+  panel.innerHTML=`<h2>Flow gallery</h2><div class="sub">${!g.length&&D.flowNote?esc(D.flowNote):D.library
+    ?`This is a library, so its walkthroughs are calls to its public API, traced by AI from the exported function to its result, each step checked against the source. ${M_ACT} public API calls found in total.`
+    :`${g.length} user actions traced through the code by AI, each step checked against the source. ${M_ACT} user actions detected in total.`}</div><ul class="list">${g.map(item).join("")}</ul>
     ${x.length?`<h4>Traced on demand (examples)</h4><ul class="list">${x.map(item).join("")}</ul>`:""}`;
   panel.querySelectorAll("li.flowitem").forEach(li=>li.onclick=()=>startFlow(+li.dataset.fi))}
 
@@ -511,7 +514,7 @@ function placePlayer(){const ar=app.getBoundingClientRect(),band=ar.bottom-140;l
   if(narrow){
     // phones: one stack under the top bar: the Layers chip and any add-on panel marked data-dock="top" first (small),
     // then the player and its steps list, which stops above the first panel or control lower on the screen
-    let y=$("bar").getBoundingClientRect().bottom-ar.top+6;const put=(el,st)=>Object.assign(el.style,{bottom:"auto",...st});
+    let y=$(iso.fi!==null?"isoBar":"bar").getBoundingClientRect().bottom-ar.top+6;const put=(el,st)=>Object.assign(el.style,{bottom:"auto",...st});
     const lay=dock[0];put(lay,{top:y+"px"});let x=8,rowH=lay.offsetHeight;if(lay.open){y+=lay.offsetHeight+6;rowH=0}else x+=lay.offsetWidth+8;
     dock.slice(1).forEach(el=>{if(el.hidden)return;put(el,{top:y+"px",left:x+"px",right:"auto"});x+=el.offsetWidth+8;rowH=Math.max(rowH,el.offsetHeight)});y+=rowH+6;
     if(!plBar.hidden){put(plBar,{top:y+"px",left:"8px",right:"8px"});y+=plBar.offsetHeight+6;if(!plList.hidden){
@@ -610,8 +613,8 @@ async function to2D(){if(mode!=="3d")return;await unisolate3D();controls.enableD
     two.list.forEach((n,i)=>{n.mesh.position.lerpVectors(start[i],n.pos,b);n.mesh.scale.x=0.25+0.75*b;n.mesh.material.opacity=Math.min(1,b*1.6)});
     two.boxes.forEach(x=>x.mesh.material.opacity=0.85*b);camera.fov=fov0+(FOV2-fov0)*e;camera.updateProjectionMatrix()});
   cityGroups.forEach(g=>g.visible=false);baseEdges();mode="2d";controls.enableRotate=false;controls.enableDamping=false;controls.autoRotate=false;controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};controls.maxDistance=Infinity;
-  set2DFlow(P.fi??lastFi);crumb([["City",showCity],["2D diagram"]]);P.fi!==null?showStep(P.k):showGallery()}
-async function to3D(){if(mode!=="2d")return;hoverEl.style.display="none";pause();clear2DFlow();dropTags(two.baseTags);two.objs.forEach(o=>scene.remove(o));two.objs=[];mode="morph";modeBtn.textContent="2D diagram";modeBtn.classList.remove("on");
+  set2DFlow(P.fi??lastFi);crumb([["City",showCity],["2D map"]]);P.fi!==null?showStep(P.k):showGallery()}
+async function to3D(){if(mode!=="2d")return;hoverEl.style.display="none";pause();clear2DFlow();dropTags(two.baseTags);two.objs.forEach(o=>scene.remove(o));two.objs=[];mode="morph";modeBtn.textContent="2D map";modeBtn.classList.remove("on");
   const fl=allFloors(),pl=plates.flatMap(mats),end=two.list.map(n=>{const v=new THREE.Vector3();(floors[n.path][n.name]||Object.values(floors[n.path])[0]).getWorldPosition(v);return v}),fov0=camera.fov;
   cityGroups.forEach(g=>g.visible=true);controls.enableRotate=true;controls.enableDamping=true;controls.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.PAN};controls.maxDistance=EXT*2.2;
   fly(CITY,CITYD,1.1,1200);
@@ -766,4 +769,7 @@ renderer.setAnimationLoop(now=>{stepTweens(now);
   const w=app.clientWidth,h=app.clientHeight;
   if(mode!=="3d"){const ppu=h/(2*Math.max(1e-3,camH())*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));app.style.setProperty("--pill",Math.max(24,NW*ppu)+"px");app.style.setProperty("--box",Math.max(24,CW*0.86*ppu)+"px")}
   const cr=camRight();tags.forEach(t=>{if(t.fl){t.fl.getWorldPosition(t.pos);t.pos.addScaledVector(cr,t.hw)}v.copy(t.pos).project(camera);const vis=v.z<1&&Math.abs(v.x)<1.1&&Math.abs(v.y)<1.1&&!(t.city&&(open.path||mode!=="3d"||close))&&!(t.layer&&(!ON[t.layer]||mode!=="3d"||open.path))&&!(t.metro&&open.path);t.el.style.display=vis?"":"none";t.el.style.left=(v.x+1)/2*w+"px";t.el.style.top=(1-v.y)/2*h+"px"})});
+// labels that would overlap one placed earlier are hidden for now (district names are placed first)
+setInterval(()=>{const shown=[];for(const t of tags){const e=t.el;if(e.style.display==="none"||e.style.visibility==="hidden"||e.classList.contains("mtag")||e.classList.contains("ftag")){e.classList.remove("occl");continue}
+  const r=e.getBoundingClientRect(),hit=shown.some(q=>r.left<q.right&&r.right>q.left&&r.top<q.bottom&&r.bottom>q.top);e.classList.toggle("occl",hit);if(!hit)shown.push(r)}},250);
 </script></body></html>
