@@ -34,6 +34,7 @@ Boarding City turns a JavaScript/TypeScript repository into a 3D city you can ex
 - **Guided tour.** On a first visit the onboarding plays itself: the city, each district, the files where user actions start, the files everything depends on, then two walkthroughs. Click anywhere to take over.
 - **What runs next? quiz.** Replay any walkthrough as a quiz: predict each next function (autocomplete, two tries, a hint), then read what that step does.
 - **Onboarding badges.** City map, Front doors, Main streets, Commuter and Next-stop predictor make you ready for your first change; more for busy files, shared state, unreached code and reading the source. Progress stays in your browser.
+- **Health layer.** Known design smells in red, computed from the import graph and history: import cycles as red bridges (Acyclic Dependencies Principle), hotspots as red haze (big files that keep changing: lines × commits), and hub files used by many and using many (⚠). Turn it on under Layers for a clickable report.
 - **GitHub links.** Every file and function opens on GitHub at the exact commit and line.
 
 ## Quickstart
