@@ -29,6 +29,8 @@ const repos = JSON.parse(fs.readFileSync(path.join(site, "repos.json"), "utf8"))
     p.on("console", m => m.type() === "error" && errs.push(m.text()));
     await p.goto("file://" + path.join(site, r.key, "demo.html"));
     await p.waitForTimeout(4000);
+    const welcomed = await p.isVisible("#welcome");  // first visit asks whether to take the tour
+    await p.click("#wSkip").catch(() => {});
     const ui = await p.evaluate(() => ["fogHud", "nav", "find", "learnBtn", "pnlMin", "paperBtn", "galleryBtn", "player"].filter(id => !document.getElementById(id)));
     await p.click("#paperBtn"); await p.waitForTimeout(500);
     const paperOpen = await p.evaluate(() => !!document.querySelector("#paper") && getComputedStyle(document.querySelector("#paper")).display !== "none");
@@ -36,9 +38,9 @@ const repos = JSON.parse(fs.readFileSync(path.join(site, "repos.json"), "utf8"))
     await p.click("#galleryBtn"); await p.waitForTimeout(400);
     await p.click("li.flowitem").catch(() => {}); await p.waitForTimeout(3000);
     const playing = await p.evaluate(() => !!(window.cityAPI && window.cityAPI.flow && window.cityAPI.flow.state()));
-    const ok = !errs.length && !ui.length && paperOpen && playing;
+    const ok = !errs.length && !ui.length && welcomed && paperOpen && playing;
     failed += !ok;
-    console.log(`${ok ? "PASS" : "FAIL"} ${r.key}: errors=${JSON.stringify(errs)} missing=${JSON.stringify(ui)} paper=${paperOpen} flow=${playing}`);
+    console.log(`${ok ? "PASS" : "FAIL"} ${r.key}: errors=${JSON.stringify(errs)} missing=${JSON.stringify(ui)} welcome=${welcomed} paper=${paperOpen} flow=${playing}`);
     await p.screenshot({ path: path.join(__dirname, "..", ".cache", `smoke_${r.key}.png`) }).catch(() => {});
     await p.close();
   }

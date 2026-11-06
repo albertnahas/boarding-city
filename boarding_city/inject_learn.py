@@ -76,6 +76,11 @@ a.gh{color:var(--acc);text-decoration:none;white-space:nowrap}a.gh:hover{text-de
 #tour p{margin:4px 0 8px;font-size:14px;line-height:1.45}
 #tour .tb{display:flex;gap:6px;flex-wrap:wrap;align-items:center}#tour .th{font-size:12px;color:var(--mute)}#tour .tb button{padding:4px 10px;font-size:12.5px}
 #tour i{display:block;height:3px;border-radius:2px;background:#ffffff14;margin-top:9px;overflow:hidden}#tour i u{display:block;height:100%;width:0;background:var(--acc);transition:width .1s linear}
+#welcome{max-width:min(460px,calc(100vw - 32px));border:1px solid #5eead466;border-radius:14px;background:#0f1424;color:var(--ink);padding:22px 22px 18px;box-shadow:0 24px 60px #000c}
+#welcome::backdrop{background:#05070dad;backdrop-filter:blur(2px)}
+#welcome h2{margin:0 0 8px;font-size:19px}#welcome p{margin:0 0 16px;font-size:14px;line-height:1.5;color:#cfd5e3}
+#welcome .wb{display:flex;gap:8px;flex-wrap:wrap}#welcome .wb button{padding:9px 14px;font-size:14px}#welcome .wb .primary{font-weight:700}
+#welcome small{display:block;margin-top:12px;color:var(--mute);font-size:12px}
 .ob-tour{width:100%;margin:2px 0 10px;padding:8px;font-weight:700}
 @media (max-width:900px){#tour{left:8px;right:8px}}
 @media (prefers-reduced-motion:reduce){#qzFb.no{animation:none}#learnToast{transition:none}}
@@ -303,7 +308,17 @@ addEventListener("resize",()=>{if(T.on)placeTour()});
 app.addEventListener("pointerdown",e=>{if(T.on&&!e.target.closest("#tour"))stopTour()},true);
 addEventListener("keydown",e=>{if(T.on&&!e.target.closest?.("#tour"))stopTour()},true);
 // a city still being built (a web-builder snapshot) never starts it: the finished city does
-if(!D.building&&(location.hash==="#tour"||!L.toured&&!location.hash))setTimeout(startTour,1200);
+// first visit to a city: ask once whether to take the tour (#tour in the URL starts it straight away)
+function welcome(){const S=stops(),mins=Math.max(1,Math.round((S.reduce((a,s)=>a+(s.ms||D.flows[s.flow].steps.length*3400),0))/60000));
+  const dlg=document.createElement("dialog");dlg.id="welcome";dlg.setAttribute("aria-labelledby","wTitle");
+  dlg.innerHTML=`<h2 id="wTitle">Welcome to the ${esc(D.repo)} city</h2><p>Every building is a file and every floor a function. New here? The guided tour plays itself in about ${mins} minute${mins===1?"":"s"}: the main areas, where features start, the files everything depends on, and real user actions running through the code.</p>
+    <div class="wb"><button type="button" class="primary" id="wStart" autofocus>▶ Start the guided tour</button><button type="button" id="wSkip">I'll explore on my own</button></div><small>You can replay it any time from 🎓 Onboarding.</small>`;
+  app.appendChild(dlg);const done=()=>{L.toured=true;save()};
+  dlg.querySelector("#wStart").onclick=()=>{dlg.close();startTour()};dlg.querySelector("#wSkip").onclick=()=>dlg.close();
+  dlg.addEventListener("close",()=>{done();dlg.remove()});
+  // the city's own Escape handler would otherwise swallow the dialog's
+  dlg.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();dlg.close()}});dlg.showModal()}
+if(!D.building){if(location.hash==="#tour")setTimeout(startTour,1200);else if(!L.toured)setTimeout(welcome,900)}
 window.cityAPI=Object.assign(window.cityAPI||{},{learn:{state:()=>({pct:overall(),won:[...won],badges:BADGES.map(b=>({id:b.id,...prog(b),it:undefined})),quiz:{...Q,answered:[...Q.answered]},min:mini}),
   show:showOnboarding,quiz:startQuiz,tour:startTour}});
 }
