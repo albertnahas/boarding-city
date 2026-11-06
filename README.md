@@ -34,6 +34,7 @@ Boarding City turns a JavaScript/TypeScript repository into a 3D city you can ex
 - **Guided tour.** On a first visit the onboarding plays itself: the city, each district, the files where user actions start, the files everything depends on, then two walkthroughs. Click anywhere to take over.
 - **What runs next? quiz.** Replay any walkthrough as a quiz: predict each next function (autocomplete, two tries, a hint), then read what that step does.
 - **Onboarding badges.** City map, Front doors, Main streets, Commuter and Next-stop predictor make you ready for your first change; more for busy files, shared state, unreached code and reading the source. Progress stays in your browser.
+- **City stats.** The city overview opens with what the skyline says: how concentrated the code is, the tallest tower and how often it changes, which tall towers are just data or generated files, the share of tiny files, unreached functions and tests. Computed from the map, no AI.
 - **Health layer.** Known design smells in red, computed from the import graph and history: import cycles as red bridges (Acyclic Dependencies Principle), hotspots as red haze (big files that keep changing: lines × commits), and hub files used by many and using many (⚠). Turn it on under Layers for a clickable report.
 - **GitHub links.** Every file and function opens on GitHub at the exact commit and line.
 
@@ -62,7 +63,7 @@ Models are configurable in `.env`. Analysis, layers and verification use no AI a
 ## Build a city in the browser
 
 On the hosted app, press **⌘K** (or **＋ Map or switch repo**), paste any public JS/TS GitHub repo, and press **Estimate**: you see the
-source size, the expected time and the cost first. **Build city** starts it in the background. The skyline appears
+source size, the expected time and the cost first. The public app runs on the author's OpenAI key, so each build stops at $0.10 (fewer walkthroughs on big repos) and builds share a $5 daily budget; for the whole repository, fork it and run it with your own key. **Build city** starts it in the background. The skyline appears
 within seconds, districts get their names one by one, and each walkthrough becomes playable as soon as it's traced
 and checked. Settings: number of walkthroughs (or your own, like "export as PNG"), models, reasoning effort, max
 files, and which features to include. Pin a commit with `owner/repo@<sha|branch|tag>` or a `github.com/owner/repo/tree/<ref>` URL (the CLI takes the same forms). Finished cities are cached per commit and settings, and every one gets a share

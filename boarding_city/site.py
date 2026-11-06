@@ -1,6 +1,6 @@
 """Render a city into site/<key>/ and keep site/repos.json and the repo list in site/index.html in sync."""
 import base64, hashlib, json, re, shutil
-from . import config, inject_fog, inject_health, inject_learn, inject_nav, inject_search
+from . import config, inject_census, inject_fog, inject_health, inject_learn, inject_nav, inject_search
 
 TEXTURES = ["d0.jpg", "d1.jpg", "d2.jpg", "d3.jpg"]
 
@@ -10,8 +10,8 @@ def page(data, fog=True):
     # "</" is escaped so code snippets in the data can never close the page's <script>
     blob = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
     h = (config.ASSETS / "template.html").read_text().replace("__DATA__", blob)
-    # fog of war (optional) -> navigation -> search -> learning layer -> health
-    h = inject_health.inject(inject_learn.inject(inject_search.inject(inject_nav.inject(inject_fog.inject(h) if fog else h))))
+    # fog of war (optional) -> navigation -> search -> learning layer -> health -> city stats
+    h = inject_census.inject(inject_health.inject(inject_learn.inject(inject_search.inject(inject_nav.inject(inject_fog.inject(h) if fog else h)))))
     # the page may only run its own scripts: names and snippets from the mapped repo can never execute, even if some
     # path is rendered unescaped (no inline handlers, javascript: URLs or injected scripts)
     return h.replace('<meta charset="utf-8">', f'<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="{csp(h)}">', 1)

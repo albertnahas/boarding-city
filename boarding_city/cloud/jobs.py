@@ -16,6 +16,7 @@ from . import store
 
 MAX_FILES = int(os.environ.get("BC_MAX_FILES", "1500"))
 DAILY_CAP = float(os.environ.get("BC_DAILY_CAP_USD", "5"))
+BUILD_CAP = float(os.environ.get("BC_BUILD_CAP_USD", "0.10"))  # per public build: walkthroughs stop before it
 RATE = int(os.environ.get("BC_BUILDS_PER_HOUR", "3"))
 ESTIMATES = int(os.environ.get("BC_ESTIMATES_PER_HOUR", "20"))
 RESUMES = 3  # a job that keeps getting cut off is stopped instead of retried forever

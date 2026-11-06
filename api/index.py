@@ -52,9 +52,10 @@ async def estimate(request: Request):
         hit = cached(jobs.cache_key(owner, name, sha, params))
         files, lines, complete, ui = gitrepo.count(owner, name, sha)
         minutes, usd = jobs.estimate(files, lines, params, library=complete and not ui)
+        capped, usd = usd[1] > jobs.BUILD_CAP, [min(u, jobs.BUILD_CAP) for u in usd]
         too_big = not complete or files > params["max_files"]
         return {"repo": f"{owner}/{name}", "sha": sha, "files": files, "lines": lines, "complete": complete, "too_big": too_big, "library": complete and not ui,
-                "max_files": params["max_files"], "builds": bool(os.environ.get("OPENAI_API_KEY")), "minutes": minutes, "usd": usd, "params": params, "cached": hit,
+                "max_files": params["max_files"], "builds": bool(os.environ.get("OPENAI_API_KEY")), "minutes": minutes, "usd": usd, "cap": jobs.BUILD_CAP, "capped": capped, "params": params, "cached": hit,
                 "message": None if not too_big else (f"This repository has {files:,} source files; on-demand builds take up to {params['max_files']:,}."
                             if complete else "This repository is too large to scan here.") + " Use the command-line tool for big repositories."}
     except jobs.Refused as e:
@@ -82,7 +83,7 @@ async def build(request: Request):
             raise jobs.Refused(f"This repository has {'more than ' if not complete else ''}{files:,} source files; on-demand builds take up to "
                                f"{params['max_files']:,}. Build it with the command-line tool.")
         job = jobs.new_job_id()
-        usd = jobs.estimate(files, lines, params, library=not ui)[1][1]
+        usd = min(jobs.estimate(files, lines, params, library=not ui)[1][1], jobs.BUILD_CAP)
         jobs.reserve(job, usd)
         st = {"id": job, "repo": f"{owner}/{name}", "sha": sha, "key": key, "params": params, "status": "queued", "stage": "queued",
               "pct": 1, "cost": 0.0, "reserved": usd, "created": time.time(), "stages": ["fetch", "structure", "describe", "propose", "analysis"],

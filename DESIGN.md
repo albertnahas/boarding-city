@@ -70,6 +70,8 @@ here without another service.
 - `BC_BUILDS_PER_HOUR` builds and `BC_ESTIMATES_PER_HOUR` estimates per visitor per hour (3 and 20). A visitor
   is a salted hash of the IPv4 address or of the IPv6 /64. The marker is written before counting and the first N
   of the hour pass, so a burst of parallel requests can't slip past the limit.
+- `BC_BUILD_CAP_USD` per build ($0.10 by default): the estimate is capped at it, and walkthroughs stop before a build
+  would pass it (the analysis still runs). The estimate says so and points to forking the repo to run it with your own key.
 - `BC_DAILY_CAP_USD` of AI per day across all builds ($5 by default). A build reserves its high-end estimate before
   it starts (first come, first served, so parallel builds can't all pass), spend is recorded after every AI call
   (a build cut off mid-stage is still counted), and the budget is checked before every AI stage. When the build
@@ -93,6 +95,6 @@ here without another service.
 |---|---|---|
 | `OPENAI_API_KEY` | none | required for builds; set as a sensitive project variable |
 | `BLOB_READ_WRITE_TOKEN` | set by linking the Blob store | |
-| `BC_MAX_FILES` / `BC_BUILDS_PER_HOUR` / `BC_ESTIMATES_PER_HOUR` / `BC_DAILY_CAP_USD` | 1500 / 3 / 20 / 5 | guards |
+| `BC_MAX_FILES` / `BC_BUILDS_PER_HOUR` / `BC_ESTIMATES_PER_HOUR` / `BC_DAILY_CAP_USD` / `BC_BUILD_CAP_USD` | 1500 / 3 / 20 / 5 / 0.10 | guards |
 | `BC_SALT` | `boarding-city` | salt for visitor hashes; set a private value in production |
 | `BOARDING_FAST_MODEL` / `BOARDING_TRACE_MODEL` / `BOARDING_TRACE_EFFORT` | gpt-6-luna / gpt-6.1-terra / low | defaults for the settings panel |

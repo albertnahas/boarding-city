@@ -82,7 +82,13 @@ def run(st, stage):
                 raise jobs.Refused("This server has no AI key configured yet, so it can map the skyline but not name districts or "
                                    "trace walkthroughs. The owner adds OPENAI_API_KEY in the Vercel project settings.", 503)
             jobs.check_budget()
-        art = {"out": STAGES[stage.split(":")[0]](c, stage), "cost": round(c.live(), 5)}
+        if stage.startswith("flow:") and over_cap(c):
+            art = {"out": {"flows": [], "report": {"steps_verified": 0, "steps_total": 0}, "capped": True}, "cost": 0}
+            if not any(c.art(s) and c.art(s)["out"].get("capped") for s in c.st["stages"] if s.startswith("flow:")):
+                c.log(f"Stopped tracing at the ${jobs.BUILD_CAP:.2f} limit per public build. For every walkthrough, fork the repo and "
+                      "run it with your own OpenAI key: https://github.com/albertnahas/boarding-city")
+        else:
+            art = {"out": STAGES[stage.split(":")[0]](c, stage), "cost": round(c.live(), 5)}
         c.save_art(stage, art)
     # recorded from the saved output, so a run cut off right after saving it still moves on
     if stage == "propose":  # one stage per walkthrough, then the analysis
@@ -93,6 +99,12 @@ def run(st, stage):
     c.st = jobs.save(c.st)
     i = c.st["stages"].index(stage)
     return c.st, (c.st["stages"][i + 1] if i + 1 < len(c.st["stages"]) else None)
+
+
+def over_cap(c):
+    """Would one more walkthrough (as costly as the ones traced so far) push this build past its cap? Leaves room for the analysis."""
+    done = [v for k, v in c.st.get("costs", {}).items() if k.startswith("flow:") and v]
+    return c.cost() + (sum(done) / len(done) if done else 0.01) > jobs.BUILD_CAP - 0.015
 
 
 # ---- stages ----

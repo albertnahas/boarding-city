@@ -25,7 +25,7 @@ CSS = """
 #navHelp[hidden]{display:none}
 #extractBtn{background:#1c2335;color:var(--acc);border:1px solid #5eead466;font-weight:600}
 #extractBtn.ready{background:var(--acc);color:#04201b;border-color:transparent}
-#app.isolated #extractBtn{display:none}
+#app.isolated #extractBtn,#extractBtn[hidden]{display:none}
 .xhint{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:#5eead41a;border:1px solid #5eead455;color:var(--acc);font-size:12.5px}
 #xToast{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:9;background:var(--acc);color:#04201b;border:0;border-radius:999px;padding:10px 16px;font:600 13.5px system-ui,sans-serif;cursor:pointer;box-shadow:0 6px 24px #0008}
 #xToast[hidden]{display:none}
@@ -131,10 +131,11 @@ const selected=()=>flow.on?flow.fi:mode==="2d"&&typeof two!=="undefined"&&two.fi
 function extract(){toast.hidden=true;const fi=selected();if(!isoEl.hidden)return;if(fi!=null)return isolate(fi);
   showGallery();const h=document.createElement("p");h.className="xhint";h.textContent="Pick a flow to extract: play it, then press “Extract flow as diagram” (or I).";panel.prepend(h)}
 xBtn.onclick=extract;toast.onclick=extract;
+// the Flow diagram button shows only once there is a flow to draw
 setInterval(()=>{if(flow.on)lastFi=flow.fi;
   // a walkthrough that played to its end (the flow player reports ended) earns the one-time hint
   if(window.cityAPI?.flow?.state?.().ended&&!hinted&&isoEl.hidden){hinted=true;try{localStorage.setItem("bc-extract-hint","1")}catch{};toast.hidden=false;setTimeout(()=>toast.hidden=true,7000)}
-  const ready=selected()!=null;xBtn.classList.toggle("ready",ready);xBtn.setAttribute("aria-label",ready?`Extract “${D.flows[selected()].title}” as a diagram`:"Extract a flow as a diagram")},250);
+  const ready=selected()!=null;xBtn.hidden=!ready;xBtn.classList.toggle("ready",ready);xBtn.setAttribute("aria-label",ready?`Extract “${D.flows[selected()].title}” as a diagram`:"Extract a flow as a diagram")},250);
 window.cityAPI=Object.assign(window.cityAPI||{},{extract,zoomBy,rotateBy,panBy,reset,fit,focus,key,
   state:()=>({view:view(),pos:camera.position.toArray().map(v=>+v.toFixed(3)),target:controls.target.toArray().map(v=>+v.toFixed(3)),iso:{...isoT},help:!help.hidden}),
   // restores a camera saved with state(): the app shell uses it to refresh a city that is still being built without moving the viewer

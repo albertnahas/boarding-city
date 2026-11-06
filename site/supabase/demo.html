@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-2JBk6n4Y1HvfN+pXHrVXe7lJmmnqCVdrO43YZJtgGwg=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-WvZqi340ZCH9KiU//g+WULMjmJn143tGtpmjNCmLNcw=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Code City</title>
 <style>
 :root{--bg:#0a0d16;--panel:#121726ee;--ink:#e8ecf5;--mute:#8b93a7;--acc:#5eead4;--flow:#fbbf24}
@@ -122,7 +122,7 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 #navHelp[hidden]{display:none}
 #extractBtn{background:#1c2335;color:var(--acc);border:1px solid #5eead466;font-weight:600}
 #extractBtn.ready{background:var(--acc);color:#04201b;border-color:transparent}
-#app.isolated #extractBtn{display:none}
+#app.isolated #extractBtn,#extractBtn[hidden]{display:none}
 .xhint{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:#5eead41a;border:1px solid #5eead455;color:var(--acc);font-size:12.5px}
 #xToast{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:9;background:var(--acc);color:#04201b;border:0;border-radius:999px;padding:10px 16px;font:600 13.5px system-ui,sans-serif;cursor:pointer;box-shadow:0 6px 24px #0008}
 #xToast[hidden]{display:none}
@@ -222,7 +222,12 @@ button.ghost{background:transparent;border:1px solid #fbbf2466;color:var(--flow)
 @media (prefers-reduced-motion:reduce){#qzFb.no{animation:none}#learnToast{transition:none}}/* /learn-css *//* health-css */.hl-sec{margin:12px 0 4px;font-weight:700;font-size:13px;color:#fca5a5}
 .hl-why{color:var(--mute);font-size:12px;margin:0 0 6px}
 .hl-list li b{color:var(--ink)}
-.hl-ok{color:#6ee7b7;font-size:12.5px}/* /health-css */</style></head><body>
+.hl-ok{color:#6ee7b7;font-size:12.5px}/* /health-css *//* census-css */.census{margin:10px 0 12px;padding:10px 12px;border:1px solid #5eead433;border-radius:10px;background:#5eead40a}
+.census h4{margin:0 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+.census ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.census li{font-size:12.5px;line-height:1.4;color:#d5dbe8}.census li b{color:var(--ink)}
+.census li a{color:var(--acc);cursor:pointer;text-decoration:none}.census li a:hover{text-decoration:underline}
+.census small{display:block;margin-top:6px;color:var(--mute);font-size:11.5px}/* /census-css */</style></head><body>
 <div id="app"><div id="bar"><button id="galleryBtn" class="primary">▶ Flow gallery</button><button id="paperBtn" title="The Daily Commit: the city's tabloid">📰 Daily Commit</button><button id="modeBtn">2D map</button><button id="homeBtn">City view</button><button id="backBtn" hidden>← Back to city</button><button id="iso3Exit" hidden>✕ Show the whole city</button></div><div id="hover"></div><!--FOG-POC--><div id="fogHud" data-dock="top" hidden><div class="fh-top"><b id="fhPct"></b><span class="fh-btns"><button id="fhReset" title="Hide everything again">Reset</button><button id="fhMin" aria-expanded="true" title="Collapse">▴</button></span></div><div class="fh-d" id="fhDist"></div><div class="fh-meta"><span id="fhFn"></span><span id="fhFl"></span></div></div><div id="fogToast" role="status" aria-live="polite"></div><!--/FOG-POC-->
 <div id="paper" hidden role="dialog" aria-modal="true" aria-label="The Daily Commit"><article class="sheet"><button id="paperClose" aria-label="Close the paper">✕</button>
 <header><div class="ears"><span id="paperEarL"></span><span>Price: zero bugs</span></div><h1>The Daily Commit</h1><div class="dateline" id="paperDate"></div></header><div id="paperBody"></div>
@@ -1123,10 +1128,11 @@ const selected=()=>flow.on?flow.fi:mode==="2d"&&typeof two!=="undefined"&&two.fi
 function extract(){toast.hidden=true;const fi=selected();if(!isoEl.hidden)return;if(fi!=null)return isolate(fi);
   showGallery();const h=document.createElement("p");h.className="xhint";h.textContent="Pick a flow to extract: play it, then press “Extract flow as diagram” (or I).";panel.prepend(h)}
 xBtn.onclick=extract;toast.onclick=extract;
+// the Flow diagram button shows only once there is a flow to draw
 setInterval(()=>{if(flow.on)lastFi=flow.fi;
   // a walkthrough that played to its end (the flow player reports ended) earns the one-time hint
   if(window.cityAPI?.flow?.state?.().ended&&!hinted&&isoEl.hidden){hinted=true;try{localStorage.setItem("bc-extract-hint","1")}catch{};toast.hidden=false;setTimeout(()=>toast.hidden=true,7000)}
-  const ready=selected()!=null;xBtn.classList.toggle("ready",ready);xBtn.setAttribute("aria-label",ready?`Extract “${D.flows[selected()].title}” as a diagram`:"Extract a flow as a diagram")},250);
+  const ready=selected()!=null;xBtn.hidden=!ready;xBtn.classList.toggle("ready",ready);xBtn.setAttribute("aria-label",ready?`Extract “${D.flows[selected()].title}” as a diagram`:"Extract a flow as a diagram")},250);
 window.cityAPI=Object.assign(window.cityAPI||{},{extract,zoomBy,rotateBy,panBy,reset,fit,focus,key,
   state:()=>({view:view(),pos:camera.position.toArray().map(v=>+v.toFixed(3)),target:controls.target.toArray().map(v=>+v.toFixed(3)),iso:{...isoT},help:!help.hidden}),
   // restores a camera saved with state(): the app shell uses it to refresh a city that is still being built without moving the viewer
@@ -1480,4 +1486,38 @@ document.getElementById("healthToggle").addEventListener("change",e=>{if(e.targe
 window.cityAPI=Object.assign(window.cityAPI||{},{health:{show:showHealth,state:()=>({cycles:cycles.map(c=>c.length),hot:hot.map(h=>h.p),hubs:hubs.map(h=>h.p)})}});
 }
 /* /health */
+/* census */
+{
+// every source file, small ones included (they live inside their block)
+const all=D.files.flatMap(f=>f.cluster?f.members.map(m=>({p:m.path,l:+m.lines||0,home:f.path})):[{p:f.path,l:+f.lines||0,home:f.path}]).sort((a,b)=>b.l-a.l);
+const total=all.reduce((a,x)=>a+x.l,0),n=all.length,fmt=v=>v.toLocaleString("en"),pct=v=>v<.01?"under 1%":Math.round(100*v)+"%";
+// generated or data files: tall, but not where the logic lives
+const DATA=/(\.gen\.|generated|\/data\/|\.d\.ts$|constants?\.|bindings|icons?\.|\.json$|locales?\/|fixtures?|mocks?\/|\.min\.)/i;
+const facts=[];
+if(n>=5){const top=all.slice(0,Math.max(1,Math.round(n/10))),share=top.reduce((a,x)=>a+x.l,0)/total;
+  facts.push(share>=.45?`<b>Downtown-heavy skyline.</b> The biggest 10% of files hold ${pct(share)} of the code: most of the work happens in a few towers.`
+    :share<=.3?`<b>Even skyline.</b> The biggest 10% of files hold only ${pct(share)} of the code: the work is spread out.`
+    :`<b>Mixed skyline.</b> The biggest 10% of files hold ${pct(share)} of the code.`)}
+const logic=all.filter(x=>!DATA.test(x.p)),data=all.slice(0,5).filter(x=>DATA.test(x.p));
+const churn=new Map((D.layers?.cranes?.files||[]).map(([p,c])=>[p,c])),commits=D.layers?.cranes?.commits;
+if(logic[0]){const t=logic[0],c=churn.get(t.p);facts.push(`<b>Tallest tower:</b> <a data-p="${esc(t.home)}">${esc(short(t.p))}</a>, ${fmt(t.l)} lines, ${pct(t.l/total)} of all the code.${t.l>3000?" A file that size is hard to hold in your head":""}${c&&commits?`${t.l>3000?", and it":" It"} changed in ${c} of the last ${commits} commits.`:t.l>3000?".":""}`)}
+if(data.length)facts.push(`<b>Some tall towers are data, not logic:</b> ${data.map(x=>`<a data-p="${esc(x.home)}">${esc(short(x.p))}</a>`).join(", ")} (generated files, constants or assets). Skip them when reading the code.`);
+const tiny=all.filter(x=>x.l<50).length,mid=all[Math.floor(n/2)]?.l;
+if(n)facts.push(`<b>${fmt(tiny)} cottages</b> under 50 lines (${pct(tiny/n)} of files): small helpers and glue. A typical file has ${fmt(mid)} lines.`);
+const sampled=D.meta?.files>n?D.meta.files:0;  // big repos are mapped from a sample
+const R=Object.entries(D.reach||{}),dead=R.filter(([,r])=>r.n===0&&r.b!=="infra").length;
+if(R.length&&dead)facts.push(`<b>${pct(dead/R.length)} of functions</b> (${fmt(dead)}) aren't reached from any user action in the static call graph: the ghost town. Some run dynamically; some may be unused.`);
+const parks=Object.values(D.layers?.parks||{}).reduce((a,v)=>a+v,0);
+if(parks)facts.push(`<b>${fmt(parks)} test files</b> (the parks): about one for every ${Math.max(1,Math.round((sampled||n)/parks))} source files.`);
+const card=()=>facts.length?`<div class="census"><h4>City stats</h4><ul>${facts.map(f=>`<li>${f}</li>`).join("")}</ul>${sampled?`<small>Mapped from a sample of ${fmt(n)} source files of ${fmt(sampled)}.</small>`:""}</div>`:"";
+const _showCity=showCity;showCity=function(){const r=_showCity();panel.querySelector(".sub")?.insertAdjacentHTML("afterend",card());
+  panel.querySelectorAll(".census a[data-p]").forEach(a=>a.onclick=()=>showFile(a.dataset.p));return r};
+// the Skyline button: the overview with these stats, seen from street level like a real skyline
+const home=document.getElementById("homeBtn");home.textContent="🏙 Skyline";home.title="See the whole skyline and what it says about the code";
+function skyline(){showCity();if(mode==="3d")fly(CITY.clone().setY(4),CITYD*0.9,0.07,1300)}
+home.onclick=skyline;backBtn.onclick=showCity;  // both were bound to the unwrapped function
+if(crumbs.textContent==="City"){panel.querySelector(".sub")?.insertAdjacentHTML("afterend",card());panel.querySelectorAll(".census a[data-p]").forEach(a=>a.onclick=()=>showFile(a.dataset.p))}  // the overview already on screen
+window.cityAPI=Object.assign(window.cityAPI||{},{skyline,census:()=>facts.map(f=>f.replace(/<[^>]+>/g,""))});
+}
+/* /census */
 </script></body></html>
