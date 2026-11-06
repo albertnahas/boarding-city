@@ -47,7 +47,9 @@ Public blobs are CDN-cached, so nothing is ever overwritten: job state is a numb
 names carry the value. A day's spend is `spend/<day>/<job>/<ns>-<microdollars>` (newest per job), summed from a listing with no
 read-modify-write. Rate limits are `rl/<kind>/<visitor>/<epoch>-<rand>`, ranked over the last hour. Blob serves HTML as a
 sandboxed download, so finished pages are served through `GET /api/city`, which only serves `cities/…` and
-`jobs/<id>/snap/…`, on the app's own origin.
+`jobs/<id>/snap/…`, on the app's own origin. A finished city is stored as data (`city-data/<key>.json`) and rendered with the
+current template and injectors each time it's served (the CDN cache is per deployment), so every city ever built
+picks up front-end fixes; only in-progress snapshots are stored as pages.
 
 A Redis store (Upstash via the Marketplace) would make the counters atomic; marker files give the same guarantees
 here without another service.

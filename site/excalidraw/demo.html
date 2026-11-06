@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-mXB+PTzuUtuvHGNrvD78kFeLNxkehTboAg8HFRNLZhU=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UK9O+rbB3KhDsGQrE55qyNAJCpV7WHc47zV2U5f4bE4=' 'sha256-mbY+YnJzk7gSTd7L6a9r3DP4RRWn1//a8+RTyVtGOms=' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Code City</title>
 <style>
 :root{--bg:#0a0d16;--panel:#121726ee;--ink:#e8ecf5;--mute:#8b93a7;--acc:#5eead4;--flow:#fbbf24}
@@ -578,7 +578,9 @@ function showGallery(){if(!flow.on)highlight(null);crumb([["City",showCity],["Fl
   const item=fi=>{const F=D.flows[fi],fs=[...new Set(F.steps.map(s=>short(s.path)))];
     return `<li class="flowitem" data-fi="${fi}"><b>▶ ${esc(F.title)}</b><span>${esc(F.desc)}</span><span class="files">${F.steps.length} steps · ${fs.length} files: ${esc(fs.join(", "))}</span>${isoBtn(fi)}</li>`};
   const g=D.flows.map((F,i)=>i).filter(i=>!D.flows[i].extra),x=D.flows.map((F,i)=>i).filter(i=>D.flows[i].extra);
-  panel.innerHTML=`<h2>Flow gallery</h2><div class="sub">${g.length} user actions traced through the code by AI, each step checked against the source. ${M_ACT} user actions detected in total.</div><ul class="list">${g.map(item).join("")}</ul>
+  panel.innerHTML=`<h2>Flow gallery</h2><div class="sub">${!g.length&&D.flowNote?esc(D.flowNote):D.library
+    ?`This is a library, so its walkthroughs are calls to its public API, traced by AI from the exported function to its result, each step checked against the source. ${M_ACT} public API calls found in total.`
+    :`${g.length} user actions traced through the code by AI, each step checked against the source. ${M_ACT} user actions detected in total.`}</div><ul class="list">${g.map(item).join("")}</ul>
     ${x.length?`<h4>Traced on demand (examples)</h4><ul class="list">${x.map(item).join("")}</ul>`:""}`;
   panel.querySelectorAll("li.flowitem").forEach(li=>li.onclick=()=>startFlow(+li.dataset.fi))}
 

@@ -50,10 +50,10 @@ async def estimate(request: Request):
         jobs.take("estimate", visitor(request), jobs.ESTIMATES, "That's a lot of estimates in one hour. Try again in a bit.")
         sha = resolve(owner, name, ref)
         hit = cached(jobs.cache_key(owner, name, sha, params))
-        files, lines, complete = gitrepo.count(owner, name, sha)
-        minutes, usd = jobs.estimate(files, lines, params)
+        files, lines, complete, ui = gitrepo.count(owner, name, sha)
+        minutes, usd = jobs.estimate(files, lines, params, library=complete and not ui)
         too_big = not complete or files > params["max_files"]
-        return {"repo": f"{owner}/{name}", "sha": sha, "files": files, "lines": lines, "complete": complete, "too_big": too_big,
+        return {"repo": f"{owner}/{name}", "sha": sha, "files": files, "lines": lines, "complete": complete, "too_big": too_big, "library": complete and not ui,
                 "max_files": params["max_files"], "builds": bool(os.environ.get("OPENAI_API_KEY")), "minutes": minutes, "usd": usd, "params": params, "cached": hit,
                 "message": None if not too_big else (f"This repository has {files:,} source files; on-demand builds take up to {params['max_files']:,}."
                             if complete else "This repository is too large to scan here.") + " Use the command-line tool for big repositories."}
@@ -77,12 +77,12 @@ async def build(request: Request):
         jobs.take("build", visitor(request), jobs.RATE,
                   f"You've started {jobs.RATE} builds in the last hour. Try again in a bit, or open a city that's already built.")
         # sized here too (not only in the estimate), so a request that skips the estimate can't start an oversized build
-        files, lines, complete = gitrepo.count(owner, name, sha)
+        files, lines, complete, ui = gitrepo.count(owner, name, sha)
         if not complete or files > params["max_files"]:
             raise jobs.Refused(f"This repository has {'more than ' if not complete else ''}{files:,} source files; on-demand builds take up to "
                                f"{params['max_files']:,}. Build it with the command-line tool.")
         job = jobs.new_job_id()
-        usd = jobs.estimate(files, lines, params)[1][1]
+        usd = jobs.estimate(files, lines, params, library=not ui)[1][1]
         jobs.reserve(job, usd)
         st = {"id": job, "repo": f"{owner}/{name}", "sha": sha, "key": key, "params": params, "status": "queued", "stage": "queued",
               "pct": 1, "cost": 0.0, "reserved": usd, "created": time.time(), "stages": ["fetch", "structure", "describe", "propose", "analysis"],
@@ -140,13 +140,17 @@ def find(repo: str = "", sha: str = "", k: str = ""):
 
 @app.get("/api/city")
 def city(path: str):
-    """Serves a built page from Blob on this origin (Blob sends HTML as a sandboxed download, and the app shell needs
-    same-origin access to the city). Only finished cities and build snapshots, never arbitrary blobs."""
-    if not re.fullmatch(r"cities/[a-z0-9._-]+\.html|jobs/\d{14}-[0-9a-f]{8}/snap/\d{4}\.html", path or ""):
+    """Serves a city page on this origin (Blob sends HTML as a sandboxed download, and the app shell needs same-origin
+    access to the city). A finished city is rendered from its stored data with the current front end, so every city
+    picks up front-end fixes (the CDN cache is per deployment); a build snapshot is served as built. Never other blobs."""
+    if m := re.fullmatch(r"cities/([a-z0-9._-]+)\.html", path or ""):
+        stored = store.get_json(f"city-data/{m.group(1)}.json")
+        page = stored and site.page(stored["data"], fog=stored["fog"]).encode()
+        cache = "public, max-age=300, s-maxage=86400"
+    elif re.fullmatch(r"jobs/\d{14}-[0-9a-f]{8}/snap/\d{4}\.html", path or "") and (url := store.url_of(path)):
+        page, cache = store.get_bytes(url), "public, max-age=300, s-maxage=31536000, immutable"
+    else:
+        page = None
+    if not page:
         return JSONResponse({"error": "Not a city."}, status_code=404)
-    url = store.url_of(path)
-    if not url:
-        return JSONResponse({"error": "Not a city."}, status_code=404)
-    page = store.get_bytes(url)
-    return HTMLResponse(page, headers={"cache-control": "public, max-age=300, s-maxage=31536000, immutable",
-                                       "content-security-policy": site.csp(page.decode()) + "; frame-ancestors 'self'"})
+    return HTMLResponse(page, headers={"cache-control": cache, "content-security-policy": site.csp(page.decode()) + "; frame-ancestors 'self'"})

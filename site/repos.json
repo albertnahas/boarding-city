@@ -13,6 +13,7 @@
   "sha": "c7baea1",
   "files": 6847,
   "flows": 6,
-  "cost": 0.1
+  "cost": 0.1,
+  "sampled": 183
  }
 ]

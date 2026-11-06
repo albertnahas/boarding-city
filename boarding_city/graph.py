@@ -169,3 +169,21 @@ def build(src, S):
                             add(nid, K[hook], "callback")
     return {"nodes": {i: {"path": n["path"], "name": n["name"], "line": n["line"], "action": n["action"]} for i, n in nodes.items()},
             "edges": edges, "entries": {i: sorted(h) for i, h in entries.items()}}
+
+
+def api_entries(src, S, G):
+    """A library has no UI entry points: its exported functions are its entry points (the calls developers make).
+    Fills G["entries"] with them when the static scan found none. -> their ids, or None for an app."""
+    if G["entries"]:
+        return None
+    out = {}
+    for f in S:
+        text = open(os.path.join(src, f["path"]), encoding="utf-8", errors="replace").read()
+        lines = text.split("\n")
+        for x in f["functions"]:
+            n = re.escape(x["name"])
+            if lines[x["line"] - 1].lstrip().startswith("export") or re.search(
+                    rf"export\s+default\s+{n}\b|export\s*\{{[^}}]*\b{n}\b|module\.exports\b[^;]*\b{n}\b|\bexports\.{n}\s*=", text):
+                out[f"{f['path']}::{x['name']}"] = ["exported API function"]
+    G["entries"] = out
+    return sorted(out) or None

@@ -38,21 +38,25 @@ def build(spec, n_flows, key, out):
         raise SystemExit("no JS/TS source files found (Boarding City maps JavaScript and TypeScript repos)")
     S = step(work, "structure", lambda: extract.callgraph(src, extract.run(src, paths)))
     dist = Districts([f["path"] for f in S])
-    proposed = step(work, "proposed", lambda: fl.propose(work, repo, S, n_flows))
+    G = step(work, "graph", lambda: graph.build(src, S))
+    api = graph.api_entries(src, S, G)  # a library: walk its exported API instead of UI actions
+    if api:
+        print(f"  library: no UI entry points; tracing calls to its {len(api)} exported functions")
+    proposed = step(work, "proposed", lambda: fl.propose(work, repo, S, n_flows, api))
     raw = step(work, "traces", lambda: fl.trace_all(work, src, S, repo, proposed))
     flows, report = step(work, "flows", lambda: fl.verify(src, S, raw))
     print(f"  verified: {report['steps_verified']}/{report['steps_total']} steps are real functions; {report['flows_kept']}/{report['flows_total']} flows kept")
     sel, home = city.select(S, flows, dist)
     targets = [e["src"]["path"] for e in sel if "src" in e and not e.get("nosnip")]
     desc = step(work, "describe", lambda: fl.describe(work, repo, S, dist, targets))
-    G = step(work, "graph", lambda: graph.build(src, S))
     actions = step(work, "actions", lambda: reach.name_actions(work, repo, G, flows))
     buildings = {e["src"]["path"] for e in sel if "src" in e}
     R = step(work, "reach", lambda: reach.compute(G, actions, flows, dist, buildings))
     LY = step(work, "layers", lambda: layers.build(src, S, G, dist, gitrepo.test_files(src)))
     shown = {e["src"]["path"] for e in sel if "src" in e}
     paper = step(work, "paper", lambda: tabloid.paper(work, repo, tabloid.facts(S, G, R, LY, shown, home)))
-    data = city.assemble(src, repo, key, sha, dist, desc, sel, home, flows, actions, R, LY, paper, spent(work), len(S))
+    data = city.assemble(src, repo, key, sha, dist, desc, sel, home, flows, actions, R, LY, paper, spent(work), len(S),
+                         library=bool(api), note=fl.why_none(api, proposed, report))
     out_dir = Path(out) if out else config.SITE / key
     site.render(data, out_dir)
     site.register(data["meta"])

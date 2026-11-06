@@ -65,7 +65,7 @@ def cache_key(owner, name, sha, params):
     return f"{owner}__{name}__{sha[:12]}__{h}".lower()
 
 
-def estimate(files, lines, params):
+def estimate(files, lines, params, library=False):
     """(minutes low, high), (dollars low, high) from measured builds: ky (31 files, 4 flows) $0.02, Excalidraw (425, 8)
     $0.25, Supabase (6.8k files, 6 flows) $0.10 on gpt-6-luna + gpt-6.1-terra; each flow is one stage."""
     n = params["flows"]
@@ -74,6 +74,8 @@ def estimate(files, lines, params):
     effort = {"low": 1.0, "medium": 1.6, "high": 2.5}[params["effort"]]
     # a trace reads the functions of the files on its path, so its cost grows with the repo (ky: $0.005/flow, Excalidraw: $0.03)
     usd = (0.003 + n * (0.003 + files * 0.00002) * scale * effort, 0.01 + n * (0.008 + files * 0.00008) * scale * effort)
+    if library:  # every exported function is named as an API call, and a trace reads whole (often large) API files
+        usd = usd[0] * 1.5, usd[1] * 1.6  # measured: sindresorhus/is, 4 API walkthroughs, $0.044
     sec = 25 + files * 0.04 + lines / 20000 + n * 18 * effort, 45 + files * 0.09 + lines / 8000 + n * 40 * effort
     return [round(s / 60, 1) for s in sec], [round(u, 2) for u in usd]
 

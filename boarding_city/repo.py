@@ -80,19 +80,25 @@ def _wanted(rel):
     return (rel.endswith(SRC_EXT) or os.path.basename(rel) == "package.json") and not re.search(r"(^|/)node_modules/", rel)
 
 
+# what makes a repo an app rather than a library: JSX event handlers, DOM listeners, routes (as graph.py detects them)
+UI = re.compile(rb"\son[A-Z]\w*=\{|\.addEventListener\(|<Route\b|createBrowserRouter|(^|/)(pages|app)/[^/]*\.[jt]sx?$")
+
+
 def count(owner, name, sha, max_bytes=80_000_000):
-    """Stream the tarball without saving it: (source files, approx lines, complete?). Stops at max_bytes of archive."""
+    """Stream the tarball without saving it: (source files, approx lines, complete?, has a UI?). Stops at max_bytes."""
     files = lines = 0
+    ui = False
     with _tarball(owner, name, sha) as r:
         with tarfile.open(fileobj=r.raw, mode="r|gz") as tar:
             for m in tar:
                 if r.raw.tell() > max_bytes:
-                    return files, lines, False
+                    return files, lines, False, ui
                 rel = m.name.split("/", 1)[-1]
                 if m.isfile() and _is_source(rel):
                     files += 1
                     lines += m.size // 32  # ~32 bytes per line of JS/TS
-    return files, lines, True
+                    ui = ui or bool(UI.search(rel.encode())) or (m.size < 2_000_000 and bool(UI.search(tar.extractfile(m).read())))
+    return files, lines, True, ui
 
 
 def fetch(owner, name, sha, dest, max_files, max_bytes=60_000_000, max_member=2_000_000, max_archive=250_000_000):

@@ -169,17 +169,23 @@ def s_propose(c, _):
     S = c.art("structure")["out"]
     reqs = c.p["requests"]
     c.log("Choosing walkthroughs to trace" if not reqs else "Matching your walkthrough requests to the code", stage="propose", pct=37)
+    api = graph.api_entries(c.source(), S, graph.build(c.src, S))
+    c.st["library"] = bool(api)
+    if api:
+        c.log(f"This is a library: no UI entry points, so the walkthroughs are calls to its {len(api)} exported functions")
     if reqs:
-        proposed = [_request(c, S, r) for r in reqs]
-        proposed = [p for p in proposed if p]
+        proposed = [f for r in reqs for f in _request(c, S, r, api)]
     else:
-        proposed = fl.propose(c.work, c.st["repo"], S, c.p["flows"])
-    c.log(f"{len(proposed)} walkthroughs to trace: " + "; ".join(p["title"] for p in proposed), pct=40)
+        proposed = fl.propose(c.work, c.st["repo"], S, c.p["flows"], api)
+    if proposed:
+        c.log(f"{len(proposed)} walkthroughs to trace: " + "; ".join(p["title"] for p in proposed), pct=40)
+    else:
+        c.log("No walkthroughs to trace. " + fl.why_none(api, proposed, {"flows_kept": 0}), pct=40)
     return proposed
 
 
-def _request(c, S, text):
-    """A visitor's own walkthrough ("export as PNG") -> title, description and candidate files, like propose() makes."""
+def _request(c, S, text, api):
+    """A visitor's own walkthrough ("export as PNG") -> [title, description and candidate files], like propose() makes."""
     rows = "\n".join(f["path"] for f in S if f["functions"])
     sch = {"type": "object", "additionalProperties": False, "required": ["title", "desc", "candidates"], "properties": {
         "title": {"type": "string"}, "desc": {"type": "string"}, "candidates": {"type": "array", "items": {"type": "string"}}}}
@@ -187,9 +193,7 @@ def _request(c, S, text):
 Return title (max 5 words, imperative), desc (one plain sentence, max 16 words) and candidates: the ~30 files most likely involved, exactly as listed.
 
 {rows}""", sch, f"request {text}")
-    ok = {f["path"] for f in S}
-    out["candidates"] = [p for p in dict.fromkeys(out["candidates"]) if p in ok]
-    return out if len(out["candidates"]) >= 3 else None
+    return fl._keep(S, [{**out, **({"api": True} if api else {})}], 1)
 
 
 def s_flow(c, stage):
@@ -221,6 +225,13 @@ def s_analysis(c, _):
     dist = Districts([f["path"] for f in S])
     sel, home = city.select(S, flows, dist)
     G = graph.build(c.source(), S)
+    graph.api_entries(c.src, S, G)  # a library's entry points are its exported functions
+    proposed = c.art("propose")["out"]
+    reports = [c.art(f"flow:{k}")["out"]["report"] for k in range(len(proposed))]
+    note = fl.why_none(c.st.get("library"), proposed, {"flows_kept": len(flows), "flows_total": len(proposed),
+                       "steps_verified": sum(r["steps_verified"] for r in reports), "steps_total": sum(r["steps_total"] for r in reports)})
+    if note and proposed:
+        c.log(note)
     actions = reach.name_actions(c.work, c.st["repo"], G, flows)
     buildings = {e["src"]["path"] for e in sel if "src" in e}
     R = reach.compute(G, actions, flows, dist, buildings)
@@ -230,7 +241,7 @@ def s_analysis(c, _):
     if feat["tabloid"]:
         c.log("Writing The Daily Commit", pct=93)
         paper = tabloid.paper(c.work, c.st["repo"], tabloid.facts(S, G, R, LY, buildings, home))
-    return {"actions": actions, "reach": R, "layers": LY if feat["layers"] else layers.empty(), "paper": paper}
+    return {"actions": actions, "reach": R, "layers": LY if feat["layers"] else layers.empty(), "paper": paper, "note": note}
 
 
 STAGES = {"fetch": s_fetch, "structure": s_structure, "describe": s_describe, "propose": s_propose, "flow": s_flow, "analysis": s_analysis}
@@ -243,7 +254,8 @@ def data(c, S, desc=None, flows=(), extra=None):
     sel, home = city.select(S, flows, dist)
     x = extra or {"actions": [], "reach": {}, "layers": layers.empty(), "paper": []}
     d = city.assemble(c.source(), c.st["repo"], c.st["key"], c.st["sha"][:7], dist, desc or {"app": "", "districts": [], "files": []},
-                      sel, home, flows, x["actions"], x["reach"], x["layers"], x["paper"], c.cost(), len(S))
+                      sel, home, flows, x["actions"], x["reach"], x["layers"], x["paper"], c.cost(), len(S),
+                      library=c.st.get("library"), note=x.get("note"))
     d["texBase"] = TEX
     on = {}
     if not c.p["features"]["layers"]:
@@ -268,9 +280,9 @@ def finish(st):
     c = Ctx(st)
     S, desc, x = c.art("structure")["out"], c.art("describe")["out"], c.art("analysis")["out"]
     d = data(c, S=S, desc=desc, flows=_flows(c, upto=len(c.art("propose")["out"])), extra=x)
-    page = site.page(d, fog=c.p["features"]["fog"])
     meta = {**d["meta"], "sha": st["sha"][:7], "key": st["key"], "params": c.p, "built": time.time(), "path": f"cities/{st['key']}.html"}
-    store.put(meta["path"], page, "text/html; charset=utf-8")
+    # the city's data, not its page: /api/city renders it with the current front end every time it's served
+    store.put(f"city-data/{st['key']}.json", {"fog": c.p["features"]["fog"], "data": d})
     store.put(f"cities/{st['key']}.json", meta)
     c.st = jobs.log(c.st, f"Done: {meta['flows']} walkthroughs, ${c.cost():.3f} of AI", status="done", stage="done", pct=100,
                     city=meta["path"], snapshot=meta["path"], cost=c.cost())

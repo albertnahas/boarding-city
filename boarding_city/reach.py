@@ -17,10 +17,10 @@ def name_actions(work, repo, G, flows):
     for b0 in range(0, len(ids), B):
         chunk = ids[b0:b0 + B]
         rows = "\n".join(f"{k}. {i} — {'; '.join(G['entries'][i])[:120]}" for k, i in enumerate(chunk))
-        out = ask(work, config.model("fast"), f"""These are user-triggered entry points detected in the {repo} source (file::function — how it is triggered: JSX event handler, DOM listener, registered action or page route).
+        out = ask(work, config.model("fast"), f"""These are user-triggered entry points detected in the {repo} source (file::function — how it is triggered: JSX event handler, DOM listener, registered action, page route, or exported API function of a library).
 For EACH entry (by number) list the 1-2 plain user actions it triggers, as short imperative names (max 4 words, e.g. "Create a table", "Undo").
 Reuse EXACTLY an existing name when the action is the same, so duplicates merge. Names already used: {sorted(acts)[:400]}. When an entry triggers one of these walkthroughs, use its title verbatim: {titles}.
-Page routes are "Open <page>" actions. Use an empty list for entries that are not user actions (layout bookkeeping, focus, resize, analytics).
+Page routes are "Open <page>" actions; an exported API function is the call a developer makes (e.g. "Check a string"). Use an empty list for entries that are not user actions (layout bookkeeping, focus, resize, analytics).
 
 {rows}""", schema, f"name entries {b0}")
         for e in out["entries"]:

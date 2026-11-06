@@ -42,7 +42,7 @@ def select(S, flows, dist):
     return files, home
 
 
-def assemble(src, repo, key, sha, dist, desc, sel, home, flows, actions, reach, LY, tabloid, cost, nfiles):
+def assemble(src, repo, key, sha, dist, desc, sel, home, flows, actions, reach, LY, tabloid, cost, nfiles, library=False, note=None):
     summ = {f["path"]: f["summary"] for f in desc["files"]}
     names = {d["index"]: d for d in desc["districts"]}
     out = []
@@ -71,7 +71,13 @@ def assemble(src, repo, key, sha, dist, desc, sel, home, flows, actions, reach, 
     data = {"repo": repo.split("/")[-1], "app": desc["app"], "colors": PALETTE[:len(districts)], "districts": districts, "files": out,
             "flows": flows, "actions": [{"name": a["name"], "flow": a["flow"], "mod": dist(a["entries"][0].split("::")[0]) if a["entries"] else 0} for a in actions],
             "reach": {k: v for k, v in reach.items() if k in shown}, "layers": LY, "home": home, "tabloid": tabloid,
-            "meta": {"key": key, "repo": repo, "sha": sha, "files": nfiles, "flows": len(flows), "cost": round(cost, 2)}}
+            "meta": {"key": key, "repo": repo, "sha": sha, "files": nfiles, "flows": len(flows), "cost": round(cost, 2),
+                     # a large repo is sampled: its cost covers the buildings shown, not every file
+                     **({"sampled": len(out)} if nfiles > SMALL_REPO else {})}}
     if nfiles > SMALL_REPO:
         data["blockHeightCap"] = 4000
+    if library:  # no UI: the walkthroughs are calls to its exported functions
+        data["library"] = True
+    if note:  # why there are no walkthroughs
+        data["flowNote"] = note
     return data
