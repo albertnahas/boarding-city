@@ -4,7 +4,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Explore a codebase as a 3D city and follow real user actions through the code.">
 <title>Boarding City</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://boarding-city.vercel.app/">
+<meta property="og:title" content="Boarding City: show your repository skyline">
+<meta property="og:description" content="Turn any public JS/TS GitHub repo into a 3D city you can explore, then ride real user actions through the code.">
+<meta property="og:image" content="https://boarding-city.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 /* Layout: one full-viewport app. A slim bar (name, repository link + switcher, fullscreen) over a full-bleed city. */
 :root{--bg:#0a0d16;--bar:#0f1320;--field:#151b2b;--line:#ffffff1a;--ink:#e8ecf5;--mute:#8b93a7;--acc:#5eead4;color-scheme:dark;
@@ -13,8 +21,8 @@ html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.4 var(--ui);overflow:hidden}
 #shell{height:100%;display:flex;flex-direction:column;background:var(--bg)}
 header{position:relative;z-index:4;display:flex;align-items:center;gap:12px;min-height:48px;padding-block:6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--bar);border-bottom:1px solid var(--line)}
-h1{margin:0;font-size:15px;font-weight:700;white-space:nowrap}
-h1 .mark{color:var(--acc)}h1 small{color:var(--mute);font-weight:500}
+h1{margin:0;font-size:15px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:8px}
+h1 .mark{flex:none;display:block}h1 small{color:var(--mute);font-weight:500}
 .repo{position:relative;min-width:0;display:flex;align-items:stretch;height:34px;background:var(--field);border:1px solid var(--line);border-radius:8px}
 .repo svg{flex:none}
 #repoLink{min-width:0;display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--ink);text-decoration:none;font:13px var(--mono);border-radius:8px 0 0 8px}
@@ -82,7 +90,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;b
 
 <div id="shell">
   <header>
-    <h1><span class="mark" aria-hidden="true">▦</span> <span class="name">Boarding City</span> <small>· Show your repository skyline</small></h1>
+    <h1><img class="mark" src="/logo.svg" width="22" height="22" alt=""><span class="name">Boarding City</span> <small>· Show your repository skyline</small></h1>
     <div class="repo">
       <a id="repoLink" target="_blank" rel="noopener" title="Open on GitHub">
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>

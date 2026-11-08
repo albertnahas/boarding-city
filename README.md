@@ -1,3 +1,5 @@
+<img src="site/logo.svg" width="96" height="96" alt="Boarding City logo">
+
 # Boarding City
 
 **Show your repository skyline.**
